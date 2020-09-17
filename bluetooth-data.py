@@ -46,8 +46,8 @@ def get_bluetooth_api_paths(url, configuration):
 
 
 def get_devices(url, device_api_endpoints, configuration):
-    device_api_args = 'json={"fields": ["kismet.device.base.commonname","kismet.device.base.first_time",' \
-                      '"kismet.device.base.last_time","kismet.device.base.mod_time"]}'
+    device_api_args = 'json={"fields": ["kismet.device.base.macaddr","kismet.device.base.commonname",' \
+                      '"kismet.device.base.first_time", "kismet.device.base.last_time","kismet.device.base.mod_time"]}'
 
     device_lists = []  # create python list to store the device lists (a list of lists)
     for endpoint in device_api_endpoints:
