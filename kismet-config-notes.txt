@@ -1,0 +1,21 @@
+When using Kismet for Bluetooth scanning over prolongged periods of time the
+device list can grow quite large. This can also cause the Kismet logfile(s)
+to grow beyond what is needed.
+
+Some tweaking to kismet's settings is needed to address this.
+
+The following changes need to be made in /etc/kismet/kismet_memory.conf:
+	Enable the tracker_device_timeout option and set to 30 minutes
+	Enable the tracker_max_devices option and set to 500
+	Set the keep_location_cloud_history to false
+	Set the keep_datasource_signal_history to false
+
+And these changes in /etc/kismet/kismet_logging.conf:
+	Set kis_log_packets to false
+	Set kis_log_messages to false
+	Set kis_log_channel_history to false
+	Set kis_log_gps_track to false
+	Set kis_log_system_status to false
+
+These are intial notes and not (yet) derived from actual testing. More info
+will be added as development continues and performance data becomes available.
