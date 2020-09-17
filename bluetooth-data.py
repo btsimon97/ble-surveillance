@@ -86,7 +86,8 @@ devices = get_devices(api_url, bluetooth_api_endpoints, config)
 # get the list of "fresh" devices (those newly discovered, all of them since this is our first probe)
 fresh_devices = get_new_devices(devices, 0)
 # print the list of "fresh" devices to console (replace this with notification code)
-print(json.dumps(fresh_devices, indent=2))
+if fresh_devices:  # check if we have new devices to print
+    print(json.dumps(fresh_devices, indent=2))  # print any new devices (this gets skipped if fresh_devices empty)
 # set the last API probe time to now (we need to have this so we can tell what devices are newly detected)
 last_api_probe = datetime.datetime.now()
 
@@ -95,5 +96,6 @@ while True:
     time.sleep(config.getint('kismet', 'api_probe_interval'))  # sleep until probe interval has passed
     devices = get_devices(api_url, bluetooth_api_endpoints, config)  # refresh the list of all devices
     fresh_devices = get_new_devices(devices, last_api_probe)  # get the list of devices that are new since last probe
-    print(json.dumps(fresh_devices, indent=2)) # print new devices to console (replace with notification code)
+    if fresh_devices:  # check if we have new devices to print.
+        print(json.dumps(fresh_devices, indent=2)) # print new devices to console (replace with notification code)
     last_api_probe = datetime.datetime.now()  # update last probe timestamp to be now since we just finished a probe
