@@ -1,0 +1,68 @@
+Currently the internal Bluetooth chip on Raspberry Pi devices does not work by
+default on 64-bit images of Kali. 
+
+Some additional manual work is needed to make this device function properly on
+this OS. Note that this only affects the integrated BT chip. External sniffers
+such as the nordic RF BTLE sniffer and the ubertooth should work fine without
+needing to follow these instructions.
+
+Make sure you run these commands as root or sudo unless otherwise specified.
+
+First, you'll need to modify /etc/systemd/system/hciuart.service. The btuart
+executable referenced in this file does not exist on Kali 64-bit, so we need
+to directly call the bluez executable responsible for adding serial devices,
+hciattach.
+
+Comment out the existing ExecStart line in the unit file and replace it with
+the following line:
+	ExecStart=/usr/bin/hciattach /dev/ttyAMA0 bcm43xx 3000000 noflow -
+
+Save your changes to the file and reload the systemd units:
+	systemctl daemon-reload
+	
+This will allow the BlueZ subsystem to interface with the device, but we also
+need to setup the device's firmware so that hciattach loads it on device 
+initialization. Otherwise you get an invalid MAC address and other improper
+behavior from the device.
+
+By default on kali 64-bit for the raspberry pi, hciattach looks for firmware
+in the /etc/firmware directory and its subdirectories. This directory doesn't
+actually exist on this image, so we need to create a symlink to where the
+firmware actually lives, /lib/firmware. We can do that with:
+	ln -s /lib/firmware /etc/firmware
+
+We also need to pull the firmware for the chip being used in the Raspberry Pi,
+as the 64-bit Kali image for the Pi doesn't ship with it right now.
+
+Go to: https://github.com/RPi-Distro/bluez-firmware/tree/master/broadcom and
+pull the BCM4345C5.hcd and BCM4345C0.hcd. Place them in /lib/firmware/brcm.
+
+Now you'll want to start up the hciuart service to try and connect the device
+to the system:
+	systemctl start hciuart
+	
+After a second, we can try the hciconfig tool to check if the device has been
+added. Run:
+	hciconfig -a
+	
+You should get several lines of output for device hci0. Make sure that your MAC
+address is NOT all A's, as this indicates a problem loading firmware.
+
+Finally, make sure the hciuart service is set to start automatically on boot.
+It should be set this way by default, but just to make sure, run:
+	systemctl enable hciuart
+	
+Your raspberry pi's bluetooth should now be fully functional on Kali 64-bit.
+Note that you should periodically check the bluez-firmware repo you pulled the
+firmware from for updates, as new firmware versions may correct bugs.
+
+One final note, although hciattach and hciconfig are deprecated, these tools
+appear to be the only ones that properly setup the bluetooth for the Pi on Kali
+right now. btattach doesn't set the right baud rate, so while the BT connection
+does come up, the baud rate is far lower than the device supports.
+
+Kali 64-bit doesn't ship with the firmware for the BT chip right now.
+We need to grab it from here: https://github.com/RPi-Distro/bluez-firmware/tree/master/broadcom
+Grab the BCM4345C5.hcd and BCM4345C0.hcd files, place in /etc/firmware/brcm
+
+
