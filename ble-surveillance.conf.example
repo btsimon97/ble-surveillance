@@ -1,0 +1,31 @@
+#This config file governs various settings for how the BLE surveillance program works.
+#The kismet section governs how the program interfaces with Kismet to retrieve data.
+[kismet]
+#Set the hostname/IP of the kismet server. This can be localhost or a remote host.
+server_name = localhost
+#Set the port number to connect to Kismet on. This is usually 2501 but may be different if Kismet is on a remote host.
+server_port = 2501
+#Sets whether the connection to the Kismet server should use HTTPS. Kismet's webserver doesn't use HTTPS by default,
+#but if its on a remote system or being proxied through another webserver you might need encryption
+use_tls = false
+
+#Sets whether we should validate TLS certs on the connection when using HTTPS. This setting is ignored if not using HTTPS
+validate_tls_certs = false
+
+#Set the credentials to use to connect to the kismet API. You should have a dedicated API user setup in Kismet
+#for this, rather than using the Kismet administrator user. Your username/password should avoid using special characters.
+username = kismet
+password = kismet
+
+#Sets whether we should try to "auto-detect" what API endpoints are available for Bluetooth device detection on Kismet
+#This should usually be enabled, but if you are having issues you can try disabling this and manually setting the
+#endpoints
+autodetect_device_apis = true
+
+#Set how far in past we should look for active devices when probing the API. This means that devices active SINCE
+#the time value set here will be returned as "active" devices. The default of 60 seconds should be good for most uses.
+active_device_timeout = 60
+
+#Set how often we should probe the Kismet API for devices. 5 seconds should be good for most uses, although users
+#wanting more frequent probes can adjust this downward.
+api_probe_interval = 5
