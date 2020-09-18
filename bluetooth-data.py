@@ -3,10 +3,30 @@ import json
 import configparser
 import datetime
 import time
+import signal
+
+
+# Define Signal Handling Function
+def process_signal(signal_number, frame):
+    if signal_number == signal.SIGINT:
+        print("Received SIGINT, shutting down...")
+        exit()
+    if signal_number == signal.SIGTERM:
+        print("Received SIGTERM, shutting down...")
+        exit()
+
+
+# Define the signals we should catch:
+if __name__ == '__main__':
+    # register the signals to be caught
+    signal.signal(signal.SIGINT, process_signal)
+    signal.signal(signal.SIGTERM, process_signal)
+
 
 # Read in the config file (this needs to get changed when a production ready version is made)
 config = configparser.ConfigParser()
 config.read('ble-surveillance.conf')
+
 
 
 def validate_config_file(configuration):
