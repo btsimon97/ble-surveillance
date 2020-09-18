@@ -66,14 +66,33 @@ def get_devices(url, device_api_endpoints, configuration):
 
 
 def get_new_devices(device_list, last_probe_time):
+    new_devices = []
     if last_probe_time == 0:  # On initial probe of API, all devices are new.
-        return device_list
+        for device in device_list: # iterate over entire device list
+            device_already_in_list = False
+            for existing_device in new_devices:
+                #  if MAC being added matches existing entry
+                if device['kismet.device.base.macaddr'] == existing_device['kismet.device.base.macaddr']:
+                    device_already_in_list = True  # signal that the record is a duplicate and should be skipped
+                    break  # we know the device is a duplicate, we don't need to continue traversal of list.
+
+            if not device_already_in_list:  # device is unique
+                new_devices.append(device)  # add the device to the new devices list
+        return new_devices
+
     else:
-        new_devices = []
         for device in device_list:  # iterate over the entire device list
             # if the device appeared after the last time we probed (>= since timestamp changes after probe completes)
             if datetime.datetime.fromtimestamp(device['kismet.device.base.first_time'], tz=None) >= last_probe_time:
-                new_devices.append(device)  # add the device to the new devices list
+                device_already_in_list = False
+                for existing_device in new_devices:
+                    #  if MAC being added matches existing entry
+                    if device['kismet.device.base.macaddr'] == existing_device['kismet.device.base.macaddr']:
+                        device_already_in_list = True  # signal that the record is a duplicate and should be skipped
+                        break  # we know the device is a duplicate, we don't need to continue traversal of list.
+
+                if not device_already_in_list:  # device is unique
+                    new_devices.append(device)  # add the device to the new devices list
         return new_devices  # return the newly discovered devices
 
 
