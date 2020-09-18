@@ -61,8 +61,3 @@ appear to be the only ones that properly setup the bluetooth for the Pi on Kali
 right now. btattach doesn't set the right baud rate, so while the BT connection
 does come up, the baud rate is far lower than the device supports.
 
-Kali 64-bit doesn't ship with the firmware for the BT chip right now.
-We need to grab it from here: https://github.com/RPi-Distro/bluez-firmware/tree/master/broadcom
-Grab the BCM4345C5.hcd and BCM4345C0.hcd files, place in /etc/firmware/brcm
-
-
