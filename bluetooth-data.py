@@ -32,13 +32,31 @@ def build_api_base_url(configuration):
 def get_device_api_paths(url, configuration):
     # Kismet API path that lists all available device views
     device_api_discovery_path = "/devices/views/all_views.json"
-    x = requests.get(url+device_api_discovery_path,
-                     auth=(configuration['kismet']['username'], configuration['kismet']['password']))
-    return x.json()
+    api_request = None  # Create API request return VAR and give it a temp value
+
+    # If we are both set to use TLS and we have TLS Cert validation enabled
+    if configuration['kismet'].getboolean('use_tls') and configuration['kismet'].getboolean('validate_tls_certs'):
+        # Set the right path and run the request.
+        api_request = requests.get(url + device_api_discovery_path,
+                                   auth=(configuration['kismet']['username'], configuration['kismet']['password']),
+                                   verify=configuration['kismet']['tls_cert_file'])
+
+    # Using TLS, but not validating the cert
+    elif configuration['kismet'].getboolean('use_tls'):
+        api_request = requests.get(url + device_api_discovery_path,
+                                   auth=(configuration['kismet']['username'], configuration['kismet']['password']),
+                                   verify=False)
+
+    # Not using TLS
+    else:
+        api_request = requests.get(url + device_api_discovery_path,
+                                   auth=(configuration['kismet']['username'], configuration['kismet']['password']))
+
+    return api_request.json()
 
 
 def get_bluetooth_api_paths(url, configuration):
-    device_api_paths = get_device_api_paths(url,configuration)
+    device_api_paths = get_device_api_paths(url, configuration)
     filtered_endpoints = [x for x in device_api_paths
                           if (("Bluetooth" in x['kismet.devices.view.description'])
                               or ("BTLE" in x['kismet.devices.view.description']))]
@@ -53,10 +71,30 @@ def get_devices(url, device_api_endpoints, configuration):
     for endpoint in device_api_endpoints:
         device_api_url = url + "/devices/views/" + endpoint['kismet.devices.view.id'] + "/last-time/" + "-" \
                          + configuration['kismet']['active_device_timeout'] + "/devices.json"
-        x = requests.post(device_api_url, data=device_api_args,
-                          headers={"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"},
-                          auth=(configuration['kismet']['username'], configuration['kismet']['password']))
-        device_lists.append(x.json())  # add the device list to the list of device lists
+
+        api_request = None  # Create API request return VAR and give it a temp value
+        # If we are both set to use TLS and we have TLS Cert validation enabled
+        if configuration['kismet'].getboolean('use_tls') and configuration['kismet'].getboolean('validate_tls_certs'):
+            # Set the right path and run the request.
+            api_request = requests.post(device_api_url, date=device_api_args,
+                                        headers={"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"},
+                                        auth=(configuration['kismet']['username'], configuration['kismet']['password']),
+                                        verify=configuration['kismet']['tls_cert_file'])
+
+        # Using TLS, but not validating the cert
+        elif configuration['kismet'].getboolean('use_tls'):
+            api_request = requests.post(device_api_url, data=device_api_args,
+                                        headers={"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"},
+                                        auth=(configuration['kismet']['username'], configuration['kismet']['password']),
+                                        verify=False)
+
+        # Not using TLS
+        else:
+            api_request = requests.post(device_api_url, data=device_api_args,
+                                        headers={"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"},
+                                        auth=(configuration['kismet']['username'], configuration['kismet']['password']))
+
+        device_lists.append(api_request.json())  # add the device list to the list of device lists
 
     device_list = []  # create python list to store consolidated device list
     for dev_list in device_lists:  # consolidate the device lists into single device lists
@@ -68,7 +106,7 @@ def get_devices(url, device_api_endpoints, configuration):
 def get_new_devices(device_list, last_probe_time):
     new_devices = []
     if last_probe_time == 0:  # On initial probe of API, all devices are new.
-        for device in device_list: # iterate over entire device list
+        for device in device_list:  # iterate over entire device list
             device_already_in_list = False
             for existing_device in new_devices:
                 #  if MAC being added matches existing entry
@@ -116,5 +154,5 @@ while True:
     devices = get_devices(api_url, bluetooth_api_endpoints, config)  # refresh the list of all devices
     fresh_devices = get_new_devices(devices, last_api_probe)  # get the list of devices that are new since last probe
     if fresh_devices:  # check if we have new devices to print.
-        print(json.dumps(fresh_devices, indent=2)) # print new devices to console (replace with notification code)
+        print(json.dumps(fresh_devices, indent=2))  # print new devices to console (replace with notification code)
     last_api_probe = datetime.datetime.now()  # update last probe timestamp to be now since we just finished a probe
