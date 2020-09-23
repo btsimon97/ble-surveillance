@@ -14,14 +14,12 @@ message_max_size = 1024  # Max size of single message in bytes. Anything longer 
 # Begin Script Functions Definition
 # Handle incoming connections and process received messages.
 async def handle_connection(reader, writer):
-    print("Spawning a new event loop due to new connection.")
     while True:
         message = await reader.read(message_max_size)  # Wait until data is available
         if not message:  # Quit the loop when we stop getting data
             break
         message = message.decode()
-        print(message)
-    print("Quitting event loop due to closed connection.")
+        print(message)  # Replace this with a function call to dispatch messages to the notification server.
     writer.close()
 
 
