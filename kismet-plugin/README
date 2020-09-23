@@ -1,0 +1,28 @@
+kismet Event Bus Forwarder.
+
+This plugin uses the KismetExternal API and Python tools to connect to Kismet
+and forward NEW_DEVICE events to another program using UNIX sockets.
+
+Installing:
+1. Create the eventbus_forwarder directory whereever kismet system plugins
+are loaded from (usually /usr/lib/kismet, but some systems are different).
+
+2. Copy the manifest file to the eventbus_forwarder directory
+
+3. Copy the kismet_eventbus_forwarder python script to /usr/bin
+
+4. Make the kismet_eventbus_forwarder script executable
+
+5. Install the kismetexternal python package from pip:
+   pip3 install kismetexternal
+
+Notes:
+This plugin is used primarily to get event data from kismet into the
+middleware and data processing subsystem of the bluetooth surveillance
+program. 
+
+After processing, the middleware will either send a request to the notification
+server requesting that a notification be sent to the user, or do nothing.
+
+Most of the interesting stuff happens in the middleware, this portion is
+relatively light to avoid bogging down kismet.
