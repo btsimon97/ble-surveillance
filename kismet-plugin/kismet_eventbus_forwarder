@@ -16,6 +16,7 @@ import time
 import sys
 import threading
 import json
+import socket
 
 # Pretty-print the failure
 try:
@@ -52,15 +53,30 @@ class KismetProxyTest(object):
         self.kei.start()
 
         # Register an event handler for all events
-        self.kei.add_event_handler("*", self.handle_event) #Once kismet's event registration is working properly change this to NEW_DEVICE
+        self.kei.add_event_handler("*", self.handle_event)  # Change this to NEW_DEVICE once subscription works
 
         # Start the IO loops running
         self.kei.run()
 
     def handle_event(self, event, dictionary):
         #print("Eventbus got {}".format(event))
-        if event == "NEW_DEVICE": #Work around the fact that Kismet is sending us every event by ignoring everything except NEW_DEVICE
-            print(json.dumps(dictionary['NEW_PHY'])) #Replace this with UNIX Socket code.
+        if event == "NEW_DEVICE":  # Work around Kismet sending every event by ignoring everything except NEW_DEVICE
+            # Initialize UNIX Socket for transmission of data
+            data_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            socket_path = '/run/bt-surveillance-processing.sock'
+            try:
+                data_socket.connect(socket_path)
+            except socket.error as msg:
+                print("Encountered an error while setting up the data socket for event forwarding.")
+                print(msg)
+                return  # The socket isn't setup for transmission, bailout of trying to send data.
+
+            # Send the event data to the socket.
+            try:
+                data_socket.send(json.dumps(dictionary['NEW_PHY']).encode())
+                print(json.dumps(dictionary['NEW_PHY']))
+            finally:
+                data_socket.close()
 
     # Loop forever
     def loop(self):
