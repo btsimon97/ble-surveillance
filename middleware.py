@@ -5,7 +5,7 @@ import asyncio
 import json
 
 # Begin Script Constants Definition
-message_socket_path = '/run/bt-surveillance-processing.sock'  # Path and name of the listening socket.
+message_socket_path = '/run/bt-surveillance/processing.sock'  # Path and name of the listening socket.
 message_socket = None  # Actual socket we'll be getting messages from. Initialized to None until socket is setup.
 message_socket_permissions = 0o666  # Socket Permissions, see note in setup function for more info.
 message_max_size = 1024  # Max size of single message in bytes. Anything longer is truncated. Must be power of 2
@@ -60,7 +60,7 @@ async def handle_connection(reader, writer):
         if not message:  # Quit the loop when we stop getting data
             break
         message = message.decode()
-        print(message)  # Replace this with a function call to dispatch messages to the notification server.
+        print(message, flush=True)  # Replace this with a function call to dispatch messages to the notification server.
     writer.close()
 
 
