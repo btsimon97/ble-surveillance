@@ -93,18 +93,18 @@ async def handle_connection(reader, writer):
 
 
 # Main loop, runs until process is shutdown (TODO: Implement signal handling so socket is properly cleaned up)
-#async def main():
+async def main():
     # Detect if socket file already exists and clean it up if it does
-#    if os.path.exists(message_socket_path):
-#        os.unlink(message_socket_path)
-#    server = await asyncio.start_unix_server(handle_connection, path=message_socket_path, start_serving=False)
-#    os.chmod(message_socket_path, message_socket_permissions)
-#    async with server:
-#        await server.serve_forever()
+    if os.path.exists(message_socket_path):
+        os.unlink(message_socket_path)
+    server = await asyncio.start_unix_server(handle_connection, path=message_socket_path, start_serving=False)
+    os.chmod(message_socket_path, message_socket_permissions)
+    async with server:
+        await server.serve_forever()
 
 # End Script Functions Definition
 
 
 # Begin Main Script Invocation
-#asyncio.run(main())  # This just spins up the async main loop we defined earlier.
+asyncio.run(main())  # This just spins up the async main loop we defined earlier.
 # End Main Script Invocation
