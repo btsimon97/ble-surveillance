@@ -1,0 +1,22 @@
+[Unit]
+Description=Bluetooth Surveillance System Processing Daemon
+
+#These lines make sure we only try to start this service after the network's up
+#Later we'll want to make sure this starts up before Kismet.
+#If we end up putting notifications in a separate process, we'll need another
+#unit file for it, and we need to make sure that the notifications subsystem
+#starts first.
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+#Startup type for service (simple in this case)
+Type=simple
+#Where the executable is we need to start, along with any args to pass
+ExecStart=/usr/bin/bt-surveillance
+#What user and group we should be running the service as
+User=btsurveillance-processing
+Group=btsurveillance
+
+[Install]
+WantedBy=multi-user.target
