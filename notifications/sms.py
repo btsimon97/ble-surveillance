@@ -24,9 +24,9 @@ def send_sms_message(recipient, msg):
 # this function creates an SMS text for warning the user about detected bluetooth devices
 def send_detected_sms(recipient, bluetooth_device):
     msg = "We detected these unregistered bluetooth devices near your detector: "
-    for device in range(len(bluetooth_device)):
+    for device in bluetooth_device:
         if device == 0:
-            msg = msg + bluetooth_device[device]
+            msg = msg + device
         else:
-            msg = msg + ", " + bluetooth_device[device]
+            msg = msg + ", " + device
     return send_sms_message(recipient, msg)
