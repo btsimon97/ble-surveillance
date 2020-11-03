@@ -60,4 +60,3 @@ echo "Installation Complete!"
 echo "The BT surveillance program has been installed and the service is running."
 echo "You still need to install kismet and add the plugin to receive data."
 echo "See the repo for instructions on how to do this."
-echo $USER_LIST
