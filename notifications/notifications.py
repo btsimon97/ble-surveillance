@@ -1,4 +1,5 @@
 import emailer
+import sms
 
 def send_email(email_type, recipient, bluetooth_devices=None):
 
@@ -8,3 +9,7 @@ def send_email(email_type, recipient, bluetooth_devices=None):
     #(ie. welcome, devices changed, etc.)
 
 #other functions for sending other type of notifications, then main file will only have to import this
+
+def send_sms(sms_type,recipient, bluetooth_devices = None):
+    if(sms_type == "detection"):
+        sms.send_detected_sms(recipient,bluetooth_devices)
