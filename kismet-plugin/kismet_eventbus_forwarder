@@ -63,7 +63,7 @@ class KismetProxyTest(object):
         if event == "NEW_DEVICE":  # Work around Kismet sending every event by ignoring everything except NEW_DEVICE
             # Initialize UNIX Socket for transmission of data
             data_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            socket_path = '/run/bt-surveillance-processing.sock'
+            socket_path = '/run/bt-surveillance/processing.sock'
             try:
                 data_socket.connect(socket_path)
             except socket.error as msg:
