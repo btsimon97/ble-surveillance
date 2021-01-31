@@ -14,12 +14,15 @@ validate_tls_certs = false
 #Sets the filename and path of the CA certificate or CA certificate bundle we should use when validating HTTPS certs
 #The default is for Fedora/RHEL/CentOS based OSes, check what file/files are appropriate for your system.
 #If you are not using HTTPS, this setting is ignored.
-tls_cert_file = /etc/ssl/ca-bundle.crt
+tls_cert_file = /etc/ssl/certs/ca-bundle.crt
 
 #Set the credentials to use to connect to the kismet API. You should have a dedicated API user setup in Kismet
 #for this, rather than using the Kismet administrator user. Your username/password should avoid using special characters.
 username = kismet
 password = kismet
+
+# Remaining Settings are for previous version of program and no longer do anything. They are retained for historical
+# reasons only and will be removed in a future update to this file.
 
 #Sets whether we should try to "auto-detect" what API endpoints are available for Bluetooth device detection on Kismet
 #This should usually be enabled, but if you are having issues you can try disabling this and manually setting the
