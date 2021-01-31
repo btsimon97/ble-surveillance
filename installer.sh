@@ -2,13 +2,11 @@
 # This is an installation script for the BT Surveillance Framework
 # Eventually we hope to do native packages for the OS, but in the meantime,
 # This shell script should set up the application for you.
-# NOTE: Kismet plugin setup and PyPi dependency loading isn't implmented yet.
-# You'll need to do this part manually for now until its added here.
 
 #Begin Script Constants Declaration
 PROG_USERNAME=btsurveillance-processing
 PROG_GROUPNAME=btsurveillance
-KISMET_APT_PKGS="kismet kismet-plugins"
+KISMET_APT_PKGS="kismet"
 PIP_APT_PKGNAME=python3-pip
 KISMET_PIP_PKGNAME=kismetexternal
 #End Script Constants Declaration
@@ -73,7 +71,11 @@ fi
 GROUP_MEMS="$(groupmems -g $PROG_GROUPNAME -l)"
 if [[ "$GROUP_MEMS" != *"$PROG_USERNAME"* ]]; then
 	echo "Adding $PROG_USERNAME to $PROG_GROUPNAME..."
-	groupmems -g $PROG_GROUPNAME -a $PROG_USERNAME
+	adduser $PROG_USERNAME $PROG_GROUPNAME
+	#groupmems has a weird quirk with PAM on Debian based OSes, so we use
+	#adduser now instead. You can uncomment the groupmems line if you want
+	#The old behavior, but remember to comment the adduser line first.
+	#groupmems -g $PROG_GROUPNAME -a $PROG_USERNAME
 fi
 
 #Deploy the tmpfiles config and reload systemd's config
@@ -92,7 +94,7 @@ systemctl daemon-reload
 systemctl start bt-surveillance.service
 
 #Install the kismet_eventbus_forwarder plugin
-mkdir /lib/$(uname -m)-linux-gnu/kismet/eventbus_forwarder
+mkdir -p /lib/$(uname -m)-linux-gnu/kismet/eventbus_forwarder
 cp kismet-plugin/manifest.conf.example /lib/$(uname -m)-linux-gnu/kismet/eventbus_forwarder/manifest.conf
 cp kismet-plugin/kismet_eventbus_forwarder /usr/bin
 chmod +x /usr/bin/kismet_eventbus_forwarder
