@@ -3,6 +3,10 @@
 import os
 import asyncio
 import json
+import websockets
+import pathlib
+import ssl
+import configparser
 
 # Begin Script Constants Definition
 message_socket_path = '/run/bt-surveillance/processing.sock'  # Path and name of the listening socket.
@@ -66,6 +70,9 @@ async def handle_connection(reader, writer):
 
 # Main loop, runs until process is shutdown (TODO: Implement signal handling so socket is properly cleaned up)
 async def main():
+    # Read config file to pull in WebSocket config data (this eventually needs to be cleaned up)
+    # config = configparser.ConfigParser()
+    # config.read('ble-surveillance.conf')
     # Detect if socket file already exists and clean it up if it does
     if os.path.exists(message_socket_path):
         os.unlink(message_socket_path)
@@ -73,7 +80,6 @@ async def main():
     os.chmod(message_socket_path, message_socket_permissions)
     async with server:
         await server.serve_forever()
-
 # End Script Functions Definition
 
 
