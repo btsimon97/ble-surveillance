@@ -68,8 +68,8 @@ async def handle_connection(reader, writer):
     writer.close()
 
 
-# Main loop, runs until process is shutdown (TODO: Implement signal handling so socket is properly cleaned up)
-async def main():
+# Socket loop, handles incoming UNIX socket connections (TODO: Implement signal handling so socket is properly cleaned up)
+async def unix_socket():
     # Read config file to pull in WebSocket config data (this eventually needs to be cleaned up)
     # config = configparser.ConfigParser()
     # config.read('ble-surveillance.conf')
@@ -80,9 +80,30 @@ async def main():
     os.chmod(message_socket_path, message_socket_permissions)
     async with server:
         await server.serve_forever()
+
+
+# Connect to Kismet WebSocket for device data retrieval
+async def kismet_websocket():
+    # Following is placeholder code and will be replaced with real websocket client code eventually.
+    while True:
+        await asyncio.sleep(1)
+        print("Running Websocket Coroutine...")
 # End Script Functions Definition
 
 
 # Begin Main Script Invocation
-asyncio.run(main())  # This just spins up the async main loop we defined earlier.
+event_loop = asyncio.get_event_loop()
+try:
+    unix_socket_task = asyncio.ensure_future(unix_socket())  # Add the UNIX socket coroutine to handle incoming data
+    kismet_websocket_task = asyncio.ensure_future(kismet_websocket())  # Add the websocket coroutine to get Kismet data
+    event_loop.run_forever()
+except KeyboardInterrupt:
+    pass
+finally:
+    print("Shutting Down...")
+    unix_socket_task.cancel()
+    kismet_websocket_task.cancel()
+    event_loop.stop()
+    event_loop.run_until_complete(event_loop.shutdown_asyncgens())
+    event_loop.close()
 # End Main Script Invocation
