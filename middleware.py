@@ -89,15 +89,23 @@ async def kismet_websocket():
     # define the message we send to Kismet Websocket server to subscribe to new events. This is always the same.
     subscription_message = '{"SUBSCRIBE": "NEW_DEVICE"}'
     # The actual websocket handling routine. TODO: Retry on failure to connect the first time.
-    async with websockets.connect(uri) as websocket:
-        await websocket.send(subscription_message)  # send the subscribe message to kismet so we start getting events.
-        # Loop forever until the connection is closed.
-        while True:
-            try:
-                kismet_message = await websocket.recv()
-                print(kismet_message)  # replace this with a function call to the processing function.
-            except websockets.exceptions.ConnectionClosed:
-                break
+    while True:
+        try:
+            async with websockets.connect(uri) as websocket:
+                print("Successfully connected to Kismet WebSocket.", flush=True)
+                await websocket.send(subscription_message)  # send the subscribe message to kismet so we start getting events.
+                # Loop forever until the connection is closed.
+                while True:
+                    try:
+                        kismet_message = await websocket.recv()
+                        print(kismet_message)  # replace this with a function call to the processing function.
+                    except websockets.exceptions.ConnectionClosed:
+                        print("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")
+                        break
+        except OSError:
+            print("Unable to connect to Kismet WebSocket. Maybe Kismet's not running?", flush=True)
+            print("Retrying in 1 Second...", flush=True)
+            await asyncio.sleep(1)
 # End Script Functions Definition
 
 
