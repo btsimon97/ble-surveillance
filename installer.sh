@@ -94,16 +94,19 @@ systemctl daemon-reload
 systemctl start bt-surveillance.service
 
 #Install the kismet_eventbus_forwarder plugin
-mkdir -p /lib/$(uname -m)-linux-gnu/kismet/eventbus_forwarder
-cp kismet-plugin/manifest.conf.example /lib/$(uname -m)-linux-gnu/kismet/eventbus_forwarder/manifest.conf
-#Test if /usr/lib/kismet directory exists and skip symlink creation if it does
-if [ ! -d "/usr/lib/kismet" ]; then
-  # Create a symlink to the previously created kismet plugins directory.
-  ln -s /lib/$(uname -m)-linux-gnu/kismet /usr/lib/kismet
-fi
+#Since we use the websocket eventbus interface now we don't need to do this
+#anymore. The lines are here for historical reasons but are commented out
 
-cp kismet-plugin/kismet_eventbus_forwarder /usr/bin
-chmod +x /usr/bin/kismet_eventbus_forwarder
+#mkdir -p /lib/$(uname -m)-linux-gnu/kismet/eventbus_forwarder
+#cp kismet-plugin/manifest.conf.example /lib/$(uname -m)-linux-gnu/kismet/eventbus_forwarder/manifest.conf
+#Test if /usr/lib/kismet directory exists and skip symlink creation if it does
+#if [ ! -d "/usr/lib/kismet" ]; then
+#  # Create a symlink to the previously created kismet plugins directory.
+#  ln -s /lib/$(uname -m)-linux-gnu/kismet /usr/lib/kismet
+#fi
+
+#cp kismet-plugin/kismet_eventbus_forwarder /usr/bin
+#chmod +x /usr/bin/kismet_eventbus_forwarder
 
 #Install is done, provide post-install instructions to user and exit.
 echo "Installation Complete!"
