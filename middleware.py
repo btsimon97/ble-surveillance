@@ -84,10 +84,20 @@ async def unix_socket():
 
 # Connect to Kismet WebSocket for device data retrieval
 async def kismet_websocket():
-    # Following is placeholder code and will be replaced with real websocket client code eventually.
-    while True:
-        await asyncio.sleep(1)
-        print("Running Websocket Coroutine...")
+    # define the websocket URI. This eventually needs to be built from the config file instead of hardcoded
+    uri = "ws://localhost:2501/eventbus/events.ws?user=username&password=password"
+    # define the message we send to Kismet Websocket server to subscribe to new events. This is always the same.
+    subscription_message = '{"SUBSCRIBE": "NEW_DEVICE"}'
+    # The actual websocket handling routine. TODO: Retry on failure to connect the first time.
+    async with websockets.connect(uri) as websocket:
+        await websocket.send(subscription_message)  # send the subscribe message to kismet so we start getting events.
+        # Loop forever until the connection is closed.
+        while True:
+            try:
+                kismet_message = await websocket.recv()
+                print(kismet_message)  # replace this with a function call to the processing function.
+            except websockets.exceptions.ConnectionClosed:
+                break
 # End Script Functions Definition
 
 
