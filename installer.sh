@@ -96,6 +96,12 @@ systemctl start bt-surveillance.service
 #Install the kismet_eventbus_forwarder plugin
 mkdir -p /lib/$(uname -m)-linux-gnu/kismet/eventbus_forwarder
 cp kismet-plugin/manifest.conf.example /lib/$(uname -m)-linux-gnu/kismet/eventbus_forwarder/manifest.conf
+#Test if /usr/lib/kismet directory exists and skip symlink creation if it does
+if [ ! -d "/usr/lib/kismet" ]; then
+  # Create a symlink to the previously created kismet plugins directory.
+  ln -s /lib/$(uname -m)-linux-gnu/kismet /usr/lib/kismet
+fi
+
 cp kismet-plugin/kismet_eventbus_forwarder /usr/bin
 chmod +x /usr/bin/kismet_eventbus_forwarder
 
