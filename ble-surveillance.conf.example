@@ -9,8 +9,7 @@ server_port = 2501
 #Sets whether the connection to the Kismet server should use HTTPS. Kismet's webserver doesn't use HTTPS by default,
 #but if its on a remote system or being proxied through another webserver you might need encryption
 use_tls = false
-#Sets whether we should validate TLS certs on the connection when using HTTPS. This setting is ignored if not using HTTPS
-validate_tls_certs = false
+
 #Sets the filename and path of the CA certificate or CA certificate bundle we should use when validating HTTPS certs
 #The default is for Fedora/RHEL/CentOS based OSes, check what file/files are appropriate for your system.
 #If you are not using HTTPS, this setting is ignored.
