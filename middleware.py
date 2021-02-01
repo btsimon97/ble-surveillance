@@ -126,11 +126,10 @@ async def kismet_websocket(configuration):
                        + configuration['kismet']['server_port'] + "/eventbus/events.ws?" \
                        + "user=" + configuration['kismet']['username'] \
                        + "&password=" + configuration['kismet']['password']
-        print(uri, flush=True)
         # The actual websocket handling routine
         while True:
             try:
-                async with websockets.connect(uri,timeout=1) as websocket:
+                async with websockets.connect(uri) as websocket:
                     print("Successfully connected to Kismet WebSocket.", flush=True)
                     await websocket.send(subscription_message)  # send the subscribe message to kismet.
                     # Loop forever until the connection is closed.
@@ -141,8 +140,7 @@ async def kismet_websocket(configuration):
                         except websockets.exceptions.ConnectionClosed:
                             print("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")
                             break
-            except Exception as e:
-                print(e)
+            except OSError:
                 print("Unable to connect to Kismet WebSocket. Maybe Kismet's not running?", flush=True)
                 print("Retrying in 1 Second...", flush=True)
                 await asyncio.sleep(1)
