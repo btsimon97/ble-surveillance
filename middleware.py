@@ -91,19 +91,13 @@ async def kismet_websocket(configuration):
 
     # message sent to kismet to get device data, along with some field simplification to reduce the data we get back.
     # split across multiple lines for better visibility.
-    subscription_message = '{' \  
-                           '"SUBSCRIBE": "NEW_DEVICE", ' \
-                           'fields: ' \
-                           '["kismet.device.base.commonname", ' \
-                           '"kismet.device.base.macaddr", ' \
-                           '"kismet.device.base.seenby"]' \
-                           '}'
+    subscription_message = '{"SUBSCRIBE": "NEW_DEVICE", "fields": ["kismet.device.base.macaddr","kismet.device.base.commonname","kismet.device.base.seenby"]}'
 
     # build the kismet websocket URI using the configuration file data
     if configuration['kismet'].getboolean('use_tls'):
         uri = "wss://" + configuration['kismet']['server_name'] + ":" \
                        + configuration['kismet']['server_port'] + "/eventbus/events.ws?" \
-                       + "?user=" + configuration['kismet']['username'] \
+                       + "user=" + configuration['kismet']['username'] \
                        + "&password=" + configuration['kismet']['password']
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         ssl_ca_cert = pathlib.Path(__file__).with_name(configuration['kismet']['tls_cert_file'])
@@ -130,12 +124,13 @@ async def kismet_websocket(configuration):
     else:
         uri = "ws://" + configuration['kismet']['server_name'] + ":" \
                        + configuration['kismet']['server_port'] + "/eventbus/events.ws?" \
-                       + "?user=" + configuration['kismet']['username'] \
+                       + "user=" + configuration['kismet']['username'] \
                        + "&password=" + configuration['kismet']['password']
+        print(uri, flush=True)
         # The actual websocket handling routine
         while True:
             try:
-                async with websockets.connect(uri) as websocket:
+                async with websockets.connect(uri,timeout=1) as websocket:
                     print("Successfully connected to Kismet WebSocket.", flush=True)
                     await websocket.send(subscription_message)  # send the subscribe message to kismet.
                     # Loop forever until the connection is closed.
@@ -146,7 +141,8 @@ async def kismet_websocket(configuration):
                         except websockets.exceptions.ConnectionClosed:
                             print("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")
                             break
-            except OSError:
+            except Exception as e:
+                print(e)
                 print("Unable to connect to Kismet WebSocket. Maybe Kismet's not running?", flush=True)
                 print("Retrying in 1 Second...", flush=True)
                 await asyncio.sleep(1)
