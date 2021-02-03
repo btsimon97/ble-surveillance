@@ -12,6 +12,18 @@ SCAN_ARGS="-t 20"
 #Path to SED or other string editing program
 SED_PROG="/usr/bin/sed"
 
+#Path to nc or ncat which are used to send scan results to middleware
+NC_PROG="/usr/bin/nc"
+
+#Arguments to pass to nc or ncat. Provided arguments specify that we're using a
+#UNIX Socket, and tell nc to quit after sending its initial data instead of
+#persisting. Arguments can be added or modified by editing the below line if
+#needed.
+NC_ARGS="-N -U"
+
+#UNIX Socket where we should send scan results to using nc
+DATA_SOCKET="/run/bt-surveillance/processing.sock"
+
 #ubertooth-scan dumps a lot of unneeeded info before reporting results.
 #We need to know what the header (line before results) looks like
 #So we can strip out earlier lines
@@ -60,5 +72,6 @@ SCAN_RESULTS=$($SED_PROG -E '1i\[' <<< "$SCAN_RESULTS")
 #8. Add closing square bracket (]) after last line of content
 SCAN_RESULTS=$($SED_PROG -E '$a]' <<< "$SCAN_RESULTS")
 
-#Print the cleaned up scan results
-echo "$SCAN_RESULTS"
+#Print the cleaned up scan results and forward them to middleware using nc
+echo echo "$SCAN_RESULTS"
+echo "$SCAN_RESULTS" | $NC_PROG $NC_ARGS $DATA_SOCKET
