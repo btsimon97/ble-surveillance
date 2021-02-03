@@ -7,7 +7,18 @@ SCAN_PROGRAM="/usr/bin/ubertooth-scan"
 #Anything shorter and you may not get consistent identification.
 #Note that devices not actively transmitting data or transmitting very
 #little data may not be identifiable.
+#If you have multiple ubertooth devices attached to your system you may need to
+#add the -U flag to specify which device to user for scans.
 SCAN_ARGS="-t 20"
+
+#Path to the ubertooth-util program. We use this to get the microcontroller
+#serial number of the ubertooth, which is the closest thing to a UUID for
+#ubertooth devices in this context.
+UTIL_PROGRAM="/usr/bin/ubertooth-util"
+
+#Arguments passed to the ubertooth-utli program. Should only need -s to get
+#microcontroller serial #
+UTIL_ARGS="-s"
 
 #Path to SED or other string editing program
 SED_PROG="/usr/bin/sed"
@@ -44,6 +55,10 @@ NAME_REGEX='\s{1}'
 #Regex to match lines missing a closing quote (any line with name key)
 NAME_LINE_REGEX='^.*[^"]$'
 
+#Get the Serial # of the ubertooth device for later use in results
+SERIAL_NUMBER="$($UTIL_PROGRAM $UTIL_ARGS)"
+SERIAL_NUMBER=$($SED_PROG -E "s/Serial No: //" <<< $SERIAL_NUMBER)
+
 #Capture Raw output from the ubertooth 
 SCAN_RESULTS="$($SCAN_PROGRAM $SCAN_ARGS)"
 
@@ -55,23 +70,25 @@ SCAN_RESULTS=$($SED_PROG "$SED_RESULTS_FILTER_REGEX" <<< "$SCAN_RESULTS")
 
 #Python makes data processing really easy when stuff is in JSON format.
 #Let's try to make the output JSON formatted.
-#1. Append {mac: to begining of line and enclose the MAC address in quotes
-SCAN_RESULTS=$($SED_PROG -E "s/$MAC_REGEX/{mac:\"&\"/" <<< "$SCAN_RESULTS")
-#2. Replace the space/tab b/w the MAC and name with name:"
-SCAN_RESULTS=$($SED_PROG -E "s/$NAME_REGEX/,name:\"/" <<< "$SCAN_RESULTS")
+#1. Append {"mac": to begining of line and enclose the MAC address in quotes
+SCAN_RESULTS=$($SED_PROG -E "s/$MAC_REGEX/{\"mac\":\"&\"/" <<< "$SCAN_RESULTS")
+#2. Replace the space/tab b/w the MAC and name with "name":"
+SCAN_RESULTS=$($SED_PROG -E "s/$NAME_REGEX/,\"name\":\"/" <<< "$SCAN_RESULTS")
 #3. Finish enclosing the name in quotes
 SCAN_RESULTS=$($SED_PROG -E "s/$NAME_LINE_REGEX/&\"/" <<< "$SCAN_RESULTS")
 #4. Close out each line with the closing }
 SCAN_RESULTS=$($SED_PROG -E 's/$/}/' <<< "$SCAN_RESULTS")
-#5. Indent each line once (for pretty terminal printing)
-SCAN_RESULTS=$($SED_PROG -E 's/^/\t/' <<< "$SCAN_RESULTS")
-#6. Add commas to all the lines except the last one.
+#5. Add commas to all the lines except the last one.
 SCAN_RESULTS=$($SED_PROG -E '$!s/$/,/' <<< "$SCAN_RESULTS")
-#7. Insert opening square bracket ([) before first line of content
-SCAN_RESULTS=$($SED_PROG -E '1i\[' <<< "$SCAN_RESULTS")
-#8. Add closing square bracket (]) after last line of content
-SCAN_RESULTS=$($SED_PROG -E '$a]' <<< "$SCAN_RESULTS")
+#6. Remove the linebreaks.
+SCAN_RESULTS=$(tr -d '\n' <<< "$SCAN_RESULTS")
+#7. Enclose Results in brackets
+SCAN_RESULTS=$($SED_PROG -E "s/.*/[&]/" <<< "$SCAN_RESULTS")
+
+#Combine the ubertooth serial number with the scan results to form the report
+#string we send to the data socket.
+REPORT="{\"ubertooth_serial_number\":\"$SERIAL_NUMBER\",\"scan_results\":$SCAN_RESULTS}"
 
 #Print the cleaned up scan results and forward them to middleware using nc
-echo echo "$SCAN_RESULTS"
-echo "$SCAN_RESULTS" | $NC_PROG $NC_ARGS $DATA_SOCKET
+echo "$REPORT" | python3 -mjson.tool
+echo "$REPORT" | $NC_PROG $NC_ARGS $DATA_SOCKET
