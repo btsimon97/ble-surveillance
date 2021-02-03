@@ -85,9 +85,12 @@ SCAN_RESULTS=$(tr -d '\n' <<< "$SCAN_RESULTS")
 #7. Enclose Results in brackets
 SCAN_RESULTS=$($SED_PROG -E "s/.*/[&]/" <<< "$SCAN_RESULTS")
 
-#Combine the ubertooth serial number with the scan results to form the report
-#string we send to the data socket.
-REPORT="{\"ubertooth_serial_number\":\"$SERIAL_NUMBER\",\"scan_results\":$SCAN_RESULTS}"
+#Combine the ubertooth serial number and ISO8601 date and time with the scan
+#results to form the report string we send to the data socket.
+REPORT="{\"ubertooth_serial_number\":\"$SERIAL_NUMBER\""
+REPORT_TIME=$(date -Iseconds)
+REPORT="$REPORT,\"scan_time\":\"$REPORT_TIME\""
+REPORT="$REPORT,\"scan_results\":$SCAN_RESULTS}"
 
 #Print the cleaned up scan results and forward them to middleware using nc
 echo "$REPORT" | python3 -mjson.tool
