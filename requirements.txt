@@ -3,3 +3,4 @@ configparser
 twilio
 python-dotenv
 websockets
+pyqt5
