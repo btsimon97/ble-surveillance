@@ -91,7 +91,7 @@ async def kismet_websocket(configuration):
 
     # message sent to kismet to get device data, along with some field simplification to reduce the data we get back.
     # split across multiple lines for better visibility.
-    subscription_message = '{"SUBSCRIBE": "NEW_DEVICE", "fields": ["kismet.device.base.macaddr","kismet.device.base.commonname","kismet.device.base.seenby"]}'
+    subscription_message = '{"SUBSCRIBE": "NEW_DEVICE", "fields":["kismet.device.base.seenby","kismet.device.base.macaddr","kismet.device.base.commonname","kismet.device.base.type"]}'
 
     # build the kismet websocket URI using the configuration file data
     if configuration['kismet'].getboolean('use_tls'):
