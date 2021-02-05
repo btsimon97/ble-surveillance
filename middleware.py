@@ -35,17 +35,44 @@ def get_message_type(message):
     else:
         return "unknown"
 
+def device_status(device_name):
+    configParser = configparser.RawConfigParser()
+    configFilePath = r'devices.conf.example'
+    configParser.read(configFilePath)
+    device_known = False
+    for section in configParser.sections():
+        if configParser.get(section,'device_name') == device_name:
+            device_known = True
+    return device_known
 
 # Process Received Message
 def process_message(message):
     message_json = json.loads(message)
+    configParser = configparser.RawConfigParser()
+    configFilePath = r'zones.conf'
+    configParser.read(configFilePath)
+    zone = ''
     if get_message_type(message) == "kismet":
         device_name = message_json['kismet.device.base.commonname']
         device_mac = message_json['kismet.device.base.macaddr']
-        detected_by_uuid = message_json['kismet.device.seenby']
+        detected_by_uuid = message_json['kismet.device.base.seenby'][0]['kismet.common.seenby.uuid']
+        device_known = device_status(device_name)
         # Determine which zone has detected the device from the configured zones
+        for section in configParser.sections():
+            if section != 'DEFAULT':
+                if detected_by_uuid == configParser.get(section,'zone_uuid'):
+                   zone = section
         # Determine the notification settings for that zone
+        # need to set up code to check default if a certain section doesn't exist for zone
         # If notification settings for zone demand a notification be sent:
+        notification_channels = configParser.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
+        for channel in notification_channels:
+            if channel == "email":
+                    print("Sent Email") # placeholders  until we set up messaging service
+            elif channel == "sms":
+                    print("Sent SMS")
+            elif channel == "signal":
+                    print("Sent SMS")
             # Format message into notification server JSON
             # Connect to notification server socket
             # Send notification message.
@@ -76,12 +103,12 @@ async def handle_connection(reader, writer):
 # Socket loop, handles incoming UNIX socket connections (TODO: Implement signal handling so socket is properly cleaned up)
 async def unix_socket():
     # Detect if socket file already exists and clean it up if it does
-    if os.path.exists(message_socket_path):
-        os.unlink(message_socket_path)
-    server = await asyncio.start_unix_server(handle_connection, path=message_socket_path, start_serving=False)
-    os.chmod(message_socket_path, message_socket_permissions)
-    async with server:
-        await server.serve_forever()
+#    if os.path.exists(message_socket_path):
+#        os.unlink(message_socket_path)
+#    server = await asyncio.start_unix_server(handle_connection, path=message_socket_path, start_serving=False)
+#    os.chmod(message_socket_path, message_socket_permissions)
+#    async with server:
+#        await server.serve_forever()
 
 
 # Connect to Kismet WebSocket for device data retrieval

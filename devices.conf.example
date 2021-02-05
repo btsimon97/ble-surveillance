@@ -1,0 +1,8 @@
+#This file is used to define the known devices
+[phone]
+#Friendly name of the device, used when firing alerts
+device_nickname = phone
+#from the kismet plugin
+device_name = iPhoneX
+device_macaddr = 11111
+
