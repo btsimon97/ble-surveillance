@@ -103,12 +103,12 @@ async def handle_connection(reader, writer):
 # Socket loop, handles incoming UNIX socket connections (TODO: Implement signal handling so socket is properly cleaned up)
 async def unix_socket():
     # Detect if socket file already exists and clean it up if it does
-#    if os.path.exists(message_socket_path):
-#        os.unlink(message_socket_path)
-#    server = await asyncio.start_unix_server(handle_connection, path=message_socket_path, start_serving=False)
-#    os.chmod(message_socket_path, message_socket_permissions)
-#    async with server:
-#        await server.serve_forever()
+    if os.path.exists(message_socket_path):
+        os.unlink(message_socket_path)
+    server = await asyncio.start_unix_server(handle_connection, path=message_socket_path, start_serving=False)
+    os.chmod(message_socket_path, message_socket_permissions)
+    async with server:
+        await server.serve_forever()
 
 
 # Connect to Kismet WebSocket for device data retrieval
