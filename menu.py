@@ -15,6 +15,11 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1000, 500)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
+        MainWindow.setSizePolicy(sizePolicy)
         MainWindow.setMinimumSize(QtCore.QSize(1000, 500))
         MainWindow.setStyleSheet("background-color: rgb(45, 45, 45);")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -107,6 +112,26 @@ class Ui_MainWindow(object):
         self.label_1.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.label_1.setObjectName("label_1")
         self.verticalLayout_7.addWidget(self.label_1)
+        self.save_1 = QtWidgets.QPushButton(self.page_1)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Maximum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.save_1.sizePolicy().hasHeightForWidth())
+        self.save_1.setSizePolicy(sizePolicy)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.save_1.setFont(font)
+        self.save_1.setStyleSheet("QPushButton {\n"
+"    color: rgb(255, 255, 255);\n"
+"    background-color: rgb(35, 35, 35);\n"
+"    border: 0px solid;\n"
+"}\n"
+"QPushButton:hover {\n"
+"    background-color: rgb(85, 170, 255);\n"
+"}")
+        self.save_1.setIconSize(QtCore.QSize(16, 16))
+        self.save_1.setObjectName("save_1")
+        self.verticalLayout_7.addWidget(self.save_1)
         self.stackedWidget.addWidget(self.page_1)
         self.page_2 = QtWidgets.QWidget()
         self.page_2.setObjectName("page_2")
@@ -120,6 +145,20 @@ class Ui_MainWindow(object):
         self.label_2.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.label_2.setObjectName("label_2")
         self.verticalLayout_6.addWidget(self.label_2)
+        self.save_2 = QtWidgets.QPushButton(self.page_2)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.save_2.setFont(font)
+        self.save_2.setStyleSheet("QPushButton {\n"
+"    color: rgb(255, 255, 255);\n"
+"    background-color: rgb(35, 35, 35);\n"
+"    border: 0px solid;\n"
+"}\n"
+"QPushButton:hover {\n"
+"    background-color: rgb(85, 170, 255);\n"
+"}")
+        self.save_2.setObjectName("save_2")
+        self.verticalLayout_6.addWidget(self.save_2)
         self.stackedWidget.addWidget(self.page_2)
         self.page_3 = QtWidgets.QWidget()
         self.page_3.setObjectName("page_3")
@@ -140,7 +179,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -150,7 +189,9 @@ class Ui_MainWindow(object):
         self.btn_page_2.setText(_translate("MainWindow", "Settings"))
         self.btn_page_3.setText(_translate("MainWindow", "Devices"))
         self.label_1.setText(_translate("MainWindow", "Zone Configuration"))
+        self.save_1.setText(_translate("MainWindow", "Save"))
         self.label_2.setText(_translate("MainWindow", "Settings"))
+        self.save_2.setText(_translate("MainWindow", "Save"))
         self.label_3.setText(_translate("MainWindow", "Devices Currently Detected:"))
 
 
