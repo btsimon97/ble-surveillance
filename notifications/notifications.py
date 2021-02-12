@@ -1,6 +1,7 @@
-import emailer
 import socket
 import json
+
+import emailer
 import sms
 
 HOST = '127.0.0.1'  # Localhost
