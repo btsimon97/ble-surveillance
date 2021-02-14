@@ -4,8 +4,8 @@
 # This shell script should set up the application for you.
 
 #Begin Script Constants Declaration
-PROG_USERNAME=btsurveillance-processing
-PROG_GROUPNAME=btsurveillance
+PROG_USERNAME=bluemon
+PROG_GROUPNAME=bluemon
 KISMET_APT_PKGS="kismet"
 PIP_APT_PKGNAME=python3-pip
 KISMET_PIP_PKGNAME=kismetexternal
@@ -79,34 +79,25 @@ if [[ "$GROUP_MEMS" != *"$PROG_USERNAME"* ]]; then
 fi
 
 #Deploy the tmpfiles config and reload systemd's config
-cp bt-surveillance.conf.systemd-tmpfiles /lib/tmpfiles.d/bt-surveillance.conf
+rm /lib/tmpfiles.d/bt-surveillance.conf
+cp bluemon.conf.systemd-tmpfiles /lib/tmpfiles.d/bluemon.conf
 systemd-tmpfiles --create --remove --boot
 
 #Install service executable (this will overwrite any existing binary)
-cp middleware.py /bin/bt-surveillance
-chmod +x /bin/bt-surveillance
+rm /bin/bt-surveillance
+cp bluemon-kismet.py /bin/bluemon-kismet
+cp bluemon-unix.py /bin/bluemon-unix
+chmod +x /bin/bluemon-kismet
+chmod +x /bin/bluemon-unix
 
 #Install the systemd service
-cp bt-surveillance.service /etc/systemd/system/
+rm /etc/systemd/system/bt-surveillance.service
+cp bluemon-kismet.service /etc/systemd/system/
 systemctl daemon-reload
 
 #Start the Service
-systemctl start bt-surveillance.service
+systemctl start bluemon-kismet.service
 
-#Install the kismet_eventbus_forwarder plugin
-#Since we use the websocket eventbus interface now we don't need to do this
-#anymore. The lines are here for historical reasons but are commented out
-
-#mkdir -p /lib/$(uname -m)-linux-gnu/kismet/eventbus_forwarder
-#cp kismet-plugin/manifest.conf.example /lib/$(uname -m)-linux-gnu/kismet/eventbus_forwarder/manifest.conf
-#Test if /usr/lib/kismet directory exists and skip symlink creation if it does
-#if [ ! -d "/usr/lib/kismet" ]; then
-#  # Create a symlink to the previously created kismet plugins directory.
-#  ln -s /lib/$(uname -m)-linux-gnu/kismet /usr/lib/kismet
-#fi
-
-#cp kismet-plugin/kismet_eventbus_forwarder /usr/bin
-#chmod +x /usr/bin/kismet_eventbus_forwarder
 
 #Install is done, provide post-install instructions to user and exit.
 echo "Installation Complete!"

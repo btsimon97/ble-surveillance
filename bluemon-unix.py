@@ -20,7 +20,7 @@ message_max_size = 1024  # Max size of single message in bytes. Anything longer 
 
 # Read in the config file (this has to be at the top so other functions can read it).
 config = configparser.ConfigParser()
-config.read('/etc/ble-surveillance.conf')  # TODO: Implement argparse so filename is set by CLI arg instead of hardcoded
+config.read('/etc/bluemon.conf')  # TODO: Implement argparse so filename is set by CLI arg instead of hardcoded
 
 
 # Handle incoming connections and process received messages.

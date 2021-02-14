@@ -13,7 +13,7 @@ import configparser
 
 # Read in the config file (this has to be at the top so other functions can read it).
 config = configparser.ConfigParser()
-config.read('/etc/ble-surveillance.conf')  # TODO: Implement argparse so filename is set by CLI arg instead of hardcoded
+config.read('/etc/bluemon.conf')  # TODO: Implement argparse so filename is set by CLI arg instead of hardcoded
 
 
 async def kismet_websocket(configuration):
