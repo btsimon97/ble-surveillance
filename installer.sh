@@ -90,9 +90,11 @@ cp bluemon-unix.py /bin/bluemon-unix
 chmod +x /bin/bluemon-kismet
 chmod +x /bin/bluemon-unix
 
-#Install the systemd service
+#Install the systemd services
 rm /etc/systemd/system/bt-surveillance.service
 cp bluemon-kismet.service /etc/systemd/system/
+cp bluemon-unix.service /etc/systemd/system/
+cp bluemon-unix.socket /etc/systemd/system
 systemctl daemon-reload
 
 #Start the Service
