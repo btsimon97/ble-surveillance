@@ -1,5 +1,5 @@
 [Unit]
-Description=Bluetooth Surveillance System Processing Daemon
+Description=Bluetooth Monitoring Service - Kismet Events Processor
 
 #These lines make sure we only try to start this service after the network's up
 #Later we'll want to make sure this starts up before Kismet.
@@ -13,10 +13,12 @@ After=network-online.target
 #Startup type for service (simple in this case)
 Type=simple
 #Where the executable is we need to start, along with any args to pass
-ExecStart=/usr/bin/bt-surveillance
+ExecStart=/usr/bin/bluemon-kismet
+#What the working directory for this service should be. Usually under /run
+WorkingDirectory=/run/bluemon/
 #What user and group we should be running the service as
-User=btsurveillance-processing
-Group=btsurveillance
+User=bluemon
+Group=bluemon
 
 [Install]
 WantedBy=multi-user.target
