@@ -83,12 +83,14 @@ rm /lib/tmpfiles.d/bt-surveillance.conf
 cp bluemon.conf.systemd-tmpfiles /lib/tmpfiles.d/bluemon.conf
 systemd-tmpfiles --create --remove --boot
 
-#Install service executable (this will overwrite any existing binary)
+#Install service executables (this will overwrite any existing binary)
 rm /bin/bt-surveillance
 cp bluemon-kismet.py /bin/bluemon-kismet
 cp bluemon-unix.py /bin/bluemon-unix
+cp bluemon-ubertooth-scan.sh /bin/bluemon-ubertooth-scan
 chmod +x /bin/bluemon-kismet
 chmod +x /bin/bluemon-unix
+chmod +x /bin/bluemon-ubertooth-scan
 
 #Install the systemd services
 rm /etc/systemd/system/bt-surveillance.service
@@ -97,10 +99,21 @@ cp bluemon-unix.service /etc/systemd/system/
 cp bluemon-unix.socket /etc/systemd/system
 systemctl daemon-reload
 
-#Start the Service
-systemctl start bluemon-kismet.service
+#Create the config directory and copy the sample configs
+mkdir /etc/bluemon
+chown $PROG_USERNAME:$PROG_GROUPNAME /etc/bluemon
+chmod 770 /etc/bluemon
+cp bluemon.conf.example /etc/bluemon
+cp zones.conf.example /etc/bluemon
 
+#Start the Service (Can't do this until config files have been setup).
+#systemctl start bluemon-kismet.service
+
+#Install the crontab entry (commented out)
+echo "#*/2 * * * *	bluemon	/bin/bluemon-ubertooth-scan" >> /etc/crontab
 
 #Install is done, provide post-install instructions to user and exit.
 echo "Installation Complete!"
-echo "The BT surveillance program has been installed and the service is running."
+echo "The BT surveillance program has been installed."
+echo "Please complete the post-install configuration to finish deployment."
+echo "You will need to modify the config files in /etc/bluemon before starting the service."
