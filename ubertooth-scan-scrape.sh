@@ -33,7 +33,7 @@ NC_PROG="/usr/bin/nc"
 NC_ARGS="-N -U"
 
 #UNIX Socket where we should send scan results to using nc
-DATA_SOCKET="/run/bt-surveillance/processing.sock"
+DATA_SOCKET="/run/bluemon/eventdata.sock"
 
 #ubertooth-scan dumps a lot of unneeeded info before reporting results.
 #We need to know what the header (line before results) looks like
