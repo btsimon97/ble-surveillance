@@ -1,15 +1,21 @@
 #!/bin/bash
+# This program uses an attached ubertooth device to detect nearby
+# undiscoverable bluetooth devices, and report them to the bluemon program
+# via a UNIX socket to generate notifications based on ubertooth scan results.
+# The bluemon-unix socket should be enabled and active in systemd before
+# attempting to run this program.
+
 #Path to the ubertooth-scan program
 SCAN_PROGRAM="/usr/bin/ubertooth-scan"
 
 #Any arguments we should pass to the scan program
-#A reliable scan needs at least 20 seconds of runtime to ID active devices
+#A reliable scan needs at least 60 seconds of runtime to ID active devices
 #Anything shorter and you may not get consistent identification.
 #Note that devices not actively transmitting data or transmitting very
 #little data may not be identifiable.
 #If you have multiple ubertooth devices attached to your system you may need to
 #add the -U flag to specify which device to user for scans.
-SCAN_ARGS="-t 20"
+SCAN_ARGS="-t 60"
 
 #Path to the ubertooth-util program. We use this to get the microcontroller
 #serial number of the ubertooth, which is the closest thing to a UUID for
