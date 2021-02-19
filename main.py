@@ -8,6 +8,8 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.setWindowTitle("BLE Bluetooth Surveillance")
+        # render zones page
+        ### copy code from index == 0 onChange ###
         # on page change call onChange
         self.ui.stackedWidget.currentChanged.connect(self.onChange)
         # on tab button click switch to respective tab
