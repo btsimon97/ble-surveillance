@@ -12,7 +12,7 @@ KISMET_PIP_PKGNAME=kismetexternal
 #End Script Constants Declaration
 
 # cd to script location so file copy commands work
-cd "${0%/*}"
+cd "${0%/*}" || exit
 
 # Check to make sure being run with root/sudo perms
 if [ `whoami` != root ]; then
@@ -97,12 +97,14 @@ rm /etc/systemd/system/bt-surveillance.service
 cp bluemon-kismet.service /etc/systemd/system/
 cp bluemon-unix.service /etc/systemd/system/
 cp bluemon-unix.socket /etc/systemd/system
+cp bluemon-notify.service /etc/systemd/system
+cp bluemon-notify.socket /etc/systemd/system
 systemctl daemon-reload
 
 #Create the config directory and copy the sample configs
 mkdir /etc/bluemon
 chown $PROG_USERNAME:$PROG_GROUPNAME /etc/bluemon
-chmod 770 /etc/bluemon
+chmod 550 /etc/bluemon
 cp bluemon.conf.example /etc/bluemon
 cp zones.conf.example /etc/bluemon
 
