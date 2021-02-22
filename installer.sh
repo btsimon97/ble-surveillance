@@ -6,6 +6,7 @@
 #Begin Script Constants Declaration
 PROG_USERNAME=bluemon
 PROG_GROUPNAME=bluemon
+PROG_DATA_DIR="/var/lib/bluemon"
 KISMET_APT_PKGS="kismet"
 PIP_APT_PKGNAME=python3-pip
 KISMET_PIP_PKGNAME=kismetexternal
@@ -55,7 +56,7 @@ fi
 getent passwd $PROG_USERNAME > /dev/null 2>&1
 if [ $? != 0 ]; then
 	echo "Creating user $PROG_USERNAME..."
-	useradd $PROG_USERNAME
+	useradd -d $PROG_DATA_DIR -r $PROG_USERNAME
 	chsh -s /sbin/nologin $PROG_USERNAME
 fi
 
@@ -77,6 +78,29 @@ if [[ "$GROUP_MEMS" != *"$PROG_USERNAME"* ]]; then
 	#The old behavior, but remember to comment the adduser line first.
 	#groupmems -g $PROG_GROUPNAME -a $PROG_USERNAME
 fi
+
+GROUP_MEMS="$(groupmems -g kismet -l)"
+if [[ "$GROUP_MEMS" != *"$PROG_USERNAME"* ]]; then
+	echo "Adding $PROG_USERNAME to kismet group..."
+	adduser $KISMET_USERNAME kismet
+	#groupmems has a weird quirk with PAM on Debian based OSes, so we use
+	#adduser now instead. You can uncomment the groupmems line if you want
+	#The old behavior, but remember to comment the adduser line first.
+	#groupmems -g $PROG_GROUPNAME -a $PROG_USERNAME
+fi
+
+#Check if Kismet data directory exists, create it if not
+ls $PROG_DATA_DIR > /dev/null 2>&1
+if [ $? != 0 ]; then
+	echo "Creating kismet data directory"
+	mkdir -p $PROG_DATA_DIR
+	chown -R $PROG_USERNAME:$PROG_GROUPNAME $PROG_DATA_DIR
+	chmod -R 750 $PROG_DATA_DIR
+	mkdir $PROG_DATA_DIR/kismet-logs
+	chown -R $PROG_USERNAME:$PROG_PROG_GROUPNAME $PROG_DATA_DIR/kismet-logs
+	chmod -R 750 $PROG_DATA_DIR/kismet-logs
+fi
+
 
 #Deploy the tmpfiles config and reload systemd's config
 rm /lib/tmpfiles.d/bt-surveillance.conf
@@ -107,6 +131,29 @@ chown $PROG_USERNAME:$PROG_GROUPNAME /etc/bluemon
 chmod 550 /etc/bluemon
 cp bluemon.conf.example /etc/bluemon
 cp zones.conf.example /etc/bluemon
+
+#Configure Kismet Service
+sed -i "s/root/$PROG_USERNAME/" /usr/lib/systemd/system/kismet.service
+cp kismet_site.conf.example /etc/kismet/kismet_site.conf
+systemctl enable kismet
+systemctl start kismet
+KISMET_ADMIN_PASSWORD="$(openssl rand -hex 20)"
+curl -d "username=admin&password=$KISMET_ADMIN_PASSWORD" http://localhost:2501/session/set_password
+API_TOKEN= "$(curl -f -d 'json={"name": "bluemon", "role": "readonly", duration: 0}' http://admin:$KISMET_ADMIN_PASSWORD@localhost:2501/auth/apikey/generate.cmd)"
+if [ $? != 0 ]; then
+  echo "Failed to generate Kismet API token for Bluemon Services."
+  echo "Check Kismet's documentation to determine how to do this manually."
+  API_TOKEN="error"
+fi
+
+#Set kismet password for Bluemon
+cp /etc/bluemon/bluemon.conf.example /etc/bluemon/bluemon.conf
+sed -i "s/username = kismet/username=admin/" /etc/bluemon/bluemon.conf
+sed -i "s/password = kismet/password=$KISMET_ADMIN_PASSWORD" /etc/bluemon/bluemon.conf
+#Eventually we'll be using Kismet API tokens instead of the kismet username and password.
+#The following line (currently commented out) will do the the config work to
+#set the API token in Bluemon's config.
+#sed -i "s/api_token=none/api_token=$API_TOKEN" /etc/bluemon/bluemon.conf
 
 #Start the Service (Can't do this until config files have been setup).
 #systemctl start bluemon-kismet.service
