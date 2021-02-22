@@ -1,1 +1,66 @@
+### BEGIN CORE SETTINGS ###
+#Set the Kismet log directory to the bluemon data directory.
 log_prefix=/var/lib/bluemon/kismet-logs
+
+### END CORE SETTINGS ###
+
+### BEGIN MEMORY SETTINGS
+
+#Set how long in seconds kismet remembers a device after it stops transmitting.
+#Initial value is for 5 minutes. Tweak this as needed.
+tracker_device_timeout=360
+
+#Maximum number of devices that kismet will remember at any given time.
+tracker_max_devices=500
+
+### END MEMORY SETTINGS ###
+
+### BEGIN LOGGING SETTINGS ###
+
+#Disable logging of packets by Kismet. This saves disk space.
+kis_log_packets=false
+
+#Disable logging of kismet's console messages to kismet log files.
+kis_log_messages=false
+
+#Disable logging the location of GPS devices
+kis_log_gps_track=false
+
+#Disable logging of Kismet system status
+kis_log_system_status=false
+
+#Disable logging of Kismet channel history
+kis_log_channel_history=false
+
+#Set the maximum backlog date, i.e. how long kismet should hold data in its
+#log files. Values below set to 30 days for each, but tweaking may be needed.
+kis_log_alert_timeout=2592000
+kis_log_device_timeout=2592000
+kis_log_message_timeout=2592000
+kis_log_packet_timeout=2592000
+kis_log_snapshot_timeout=2592000
+
+### END LOGGING SETTINGS ###
+
+### BEGIN DATASOURCE SETTINGS ###
+
+#Collect data from onboard Bluetooth by default.
+source=hci0:name=linuxbt
+
+#Define the Nordic RF BTLE Sniffer datasource. Disabled by default, check
+#the documentation for instructions on how to setup this datasource.
+#source=nrf51822:device=/dev/ttyUSB0
+
+#Define the TI CC2540 datasource. Disabled by default, check
+#the documentation for instructions on how to setup this datasource.
+#source=ticc2540
+
+#Define the Ubertooth datasource. Disabled by default, check
+#the documentation for instructions on how to setup this datasource.
+#Note that using the Ubertooth device through Kismet will only find BTLE
+#devices, not standard BT devices. Using an ubertooth device in kismet and
+#with the ubertooth-scan interface for bluemon is not supported. You must
+#choose one of these interfaces for receiving data from the ubertooth device.
+#source=ubertooth
+
+### END DATASOURCE SETTINGS
