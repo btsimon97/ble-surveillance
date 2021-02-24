@@ -4,5 +4,11 @@
 device_nickname = phone
 #from the kismet plugin
 device_name = iPhoneX
-device_macaddr = 11111
+device_macaddr = ??:??:??:B4:36:EC
 
+[Sarah]
+#Friendly name of the device, used when firing alerts
+device_nickname = Sarah's Phone
+#from the kismet plugin
+device_name = iPhoneX
+device_macaddr = A8:31:7D:74:BA:10
