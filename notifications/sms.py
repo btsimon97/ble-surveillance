@@ -30,3 +30,8 @@ def send_detected_sms(recipient, bluetooth_device):
         else:
             msg = msg + ", " + device
     return send_sms_message(recipient, msg)
+
+
+def send_sms(sms_type, channel_data, bluetooth_devices = None):
+    if(sms_type == "detection"):
+        send_detected_sms(channel_data.recipient,bluetooth_devices)
