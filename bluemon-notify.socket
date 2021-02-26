@@ -1,0 +1,10 @@
+[Unit]
+Description=Bluetooth Monitoring Service Notification Server Socket
+PartOf=bluemon-notify.service
+
+[Socket]
+#The port to listen for connections on
+ListenStream=5555
+
+[Install]
+WantedBy=sockets.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=Bluetooth Monitoring Service UNIX Socket
+PartOf=bluemon-unix.service
+
+[Socket]
+#The socket file's path
+ListenStream=/run/bluemon/eventdata.socket
+#The mode of the socket (permissions set here only allow the user and group of the socket to write to it).
+SocketMode=0660
+#What user and group we should own the socket file
+SocketUser=bluemon
+SocketGroup=bluemon
+
+[Install]
+WantedBy=sockets.target

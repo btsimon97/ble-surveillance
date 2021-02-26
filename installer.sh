@@ -4,15 +4,16 @@
 # This shell script should set up the application for you.
 
 #Begin Script Constants Declaration
-PROG_USERNAME=btsurveillance-processing
-PROG_GROUPNAME=btsurveillance
+PROG_USERNAME=bluemon
+PROG_GROUPNAME=bluemon
+PROG_DATA_DIR="/var/lib/bluemon"
 KISMET_APT_PKGS="kismet"
 PIP_APT_PKGNAME=python3-pip
 KISMET_PIP_PKGNAME=kismetexternal
 #End Script Constants Declaration
 
 # cd to script location so file copy commands work
-cd "${0%/*}"
+cd "${0%/*}" || exit
 
 # Check to make sure being run with root/sudo perms
 if [ `whoami` != root ]; then
@@ -55,7 +56,7 @@ fi
 getent passwd $PROG_USERNAME > /dev/null 2>&1
 if [ $? != 0 ]; then
 	echo "Creating user $PROG_USERNAME..."
-	useradd $PROG_USERNAME
+	useradd -d $PROG_DATA_DIR -r $PROG_USERNAME
 	chsh -s /sbin/nologin $PROG_USERNAME
 fi
 
@@ -78,36 +79,90 @@ if [[ "$GROUP_MEMS" != *"$PROG_USERNAME"* ]]; then
 	#groupmems -g $PROG_GROUPNAME -a $PROG_USERNAME
 fi
 
+GROUP_MEMS="$(groupmems -g kismet -l)"
+if [[ "$GROUP_MEMS" != *"$PROG_USERNAME"* ]]; then
+	echo "Adding $PROG_USERNAME to kismet group..."
+	adduser $KISMET_USERNAME kismet
+	#groupmems has a weird quirk with PAM on Debian based OSes, so we use
+	#adduser now instead. You can uncomment the groupmems line if you want
+	#The old behavior, but remember to comment the adduser line first.
+	#groupmems -g $PROG_GROUPNAME -a $PROG_USERNAME
+fi
+
+#Check if Kismet data directory exists, create it if not
+ls $PROG_DATA_DIR > /dev/null 2>&1
+if [ $? != 0 ]; then
+	echo "Creating kismet data directory"
+	mkdir -p $PROG_DATA_DIR
+	chown -R $PROG_USERNAME:$PROG_GROUPNAME $PROG_DATA_DIR
+	chmod -R 750 $PROG_DATA_DIR
+	mkdir $PROG_DATA_DIR/kismet-logs
+	chown -R $PROG_USERNAME:$PROG_PROG_GROUPNAME $PROG_DATA_DIR/kismet-logs
+	chmod -R 750 $PROG_DATA_DIR/kismet-logs
+fi
+
+
 #Deploy the tmpfiles config and reload systemd's config
-cp bt-surveillance.conf.systemd-tmpfiles /lib/tmpfiles.d/bt-surveillance.conf
+rm /lib/tmpfiles.d/bt-surveillance.conf
+cp bluemon.conf.systemd-tmpfiles /lib/tmpfiles.d/bluemon.conf
 systemd-tmpfiles --create --remove --boot
 
-#Install service executable (this will overwrite any existing binary)
-cp middleware.py /bin/bt-surveillance
-chmod +x /bin/bt-surveillance
+#Install service executables (this will overwrite any existing binary)
+rm /bin/bt-surveillance
+cp bluemon-kismet.py /bin/bluemon-kismet
+cp bluemon-unix.py /bin/bluemon-unix
+cp bluemon-ubertooth-scan.sh /bin/bluemon-ubertooth-scan
+chmod +x /bin/bluemon-kismet
+chmod +x /bin/bluemon-unix
+chmod +x /bin/bluemon-ubertooth-scan
 
-#Install the systemd service
-cp bt-surveillance.service /etc/systemd/system/
+#Install the systemd services
+rm /etc/systemd/system/bt-surveillance.service
+cp bluemon-kismet.service /etc/systemd/system/
+cp bluemon-unix.service /etc/systemd/system/
+cp bluemon-unix.socket /etc/systemd/system
+cp bluemon-notify.service /etc/systemd/system
+cp bluemon-notify.socket /etc/systemd/system
 systemctl daemon-reload
 
-#Start the Service
-systemctl start bt-surveillance.service
+#Create the config directory and copy the sample configs
+mkdir /etc/bluemon
+chown $PROG_USERNAME:$PROG_GROUPNAME /etc/bluemon
+chmod 550 /etc/bluemon
+cp bluemon.conf.example /etc/bluemon
+cp zones.conf.example /etc/bluemon
 
-#Install the kismet_eventbus_forwarder plugin
-#Since we use the websocket eventbus interface now we don't need to do this
-#anymore. The lines are here for historical reasons but are commented out
+#Configure Kismet Service
+sed -i "s/root/$PROG_USERNAME/" /usr/lib/systemd/system/kismet.service
+cp kismet_site.conf.example /etc/kismet/kismet_site.conf
+systemctl enable kismet
+systemctl start kismet
+KISMET_ADMIN_PASSWORD="$(openssl rand -hex 20)"
+curl -d "username=admin&password=$KISMET_ADMIN_PASSWORD" http://localhost:2501/session/set_password
+API_TOKEN= "$(curl -f -d 'json={"name": "bluemon", "role": "readonly", duration: 0}' http://admin:$KISMET_ADMIN_PASSWORD@localhost:2501/auth/apikey/generate.cmd)"
+if [ $? != 0 ]; then
+  echo "Failed to generate Kismet API token for Bluemon Services."
+  echo "Check Kismet's documentation to determine how to do this manually."
+  API_TOKEN="error"
+fi
 
-#mkdir -p /lib/$(uname -m)-linux-gnu/kismet/eventbus_forwarder
-#cp kismet-plugin/manifest.conf.example /lib/$(uname -m)-linux-gnu/kismet/eventbus_forwarder/manifest.conf
-#Test if /usr/lib/kismet directory exists and skip symlink creation if it does
-#if [ ! -d "/usr/lib/kismet" ]; then
-#  # Create a symlink to the previously created kismet plugins directory.
-#  ln -s /lib/$(uname -m)-linux-gnu/kismet /usr/lib/kismet
-#fi
+#Set kismet password for Bluemon
+cp /etc/bluemon/bluemon.conf.example /etc/bluemon/bluemon.conf
+sed -i "s/username = kismet/username=admin/" /etc/bluemon/bluemon.conf
+sed -i "s/password = kismet/password=$KISMET_ADMIN_PASSWORD" /etc/bluemon/bluemon.conf
+#Eventually we'll be using Kismet API tokens instead of the kismet username and password.
+#The following line (currently commented out) will do the the config work to
+#set the API token in Bluemon's config.
+#sed -i "s/api_token=none/api_token=$API_TOKEN" /etc/bluemon/bluemon.conf
 
-#cp kismet-plugin/kismet_eventbus_forwarder /usr/bin
-#chmod +x /usr/bin/kismet_eventbus_forwarder
+#Start the Service (Can't do this until config files have been setup).
+#systemctl start bluemon-kismet.service
+
+#Install the crontab entry (commented out)
+echo "#*/2 * * * *	bluemon	/bin/bluemon-ubertooth-scan" >> /etc/crontab
 
 #Install is done, provide post-install instructions to user and exit.
 echo "Installation Complete!"
-echo "The BT surveillance program has been installed and the service is running."
+echo "The BT surveillance program has been installed."
+echo "Please complete the post-install configuration to finish deployment."
+echo "You will need to modify the config files in /etc/bluemon before starting the service."
