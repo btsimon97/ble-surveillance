@@ -26,38 +26,114 @@ config.read('/etc/ble-surveillance.conf')  # TODO: Implement argparse so filenam
 # Identify what type of message was received (i.e. what program sent it)
 def get_message_type(message):
     message_json = json.loads(message)
-    if ("kismet.device.base.macaddr" in message_json) or ("kismet.device.base.commonname" in message_json):
+    if('NEW_DEVICE' in message_json):
         return "kismet"
 
-    elif ("mac" in message_json) or ("name" in message_json):
+    elif ("ubertooth_serial_number" in message_json) or ("scan_results" in message_json):
         return "ubertooth"
-
     else:
         return "unknown"
+
+#gets device status(known or unknown) if message recieved from ubertooth
+def device_status_u(device_name,ignore_uap):
+    configParser = configparser.RawConfigParser()
+    configFilePath = r'devices.conf.example'
+    configParser.read(configFilePath)
+    device_known = False
+    device_nickname = "Unknown Device"
+    # checks all sections(devices) in configparser to see if macaddr detected is equal
+    for section in configParser.sections():
+        macaddr = configParser.get(section, 'device_macaddr')
+        if macaddr[9:] == device_name[9:]:#last 3 parts of macaddr should always be available, check if match
+            if macaddr[6:] == device_name[6:]: #if last 4 parts are readable and = to device, known
+                device_known = True
+                device_nickname = configParser.get(section,'device_nickname')
+            elif (macaddr[6:8] == '??') & (ignore_uap== "false"): #if second part is ?? and we choose not to ignore uap, known
+                device_known = True
+    return device_known,device_nickname
+
+#device status(known or unknown) if messsage recieved from kismet
+def device_status_k(device_name):
+    configParser = configparser.RawConfigParser()
+    configFilePath = r'devices.conf.example'
+    configParser.read(configFilePath)
+    device_known = False
+    device_nickname = "Unknown Device"
+    for section in configParser.sections():
+        if configParser.get(section,'device_macaddr') == device_name:
+            device_known = True
+            device_nickname = configParser.get(section,'device_nickname')
+    return device_known,device_nickname
+
+#determine whether the message requires notificaiton
+def message_elegibility(dev_type, configParser, zone,device_known, nickname,macaddr, ubertoothName):
+    eligibility = False
+    monitor_unknown = not device_known & (configParser.get(zone, 'alert_on_unrecognized') == 'true')
+    monitor_known = device_known & (configParser.get(zone, 'alert_on_recognized') == 'true')
+    if (dev_type == 'BTLE'):
+        if (configParser.get(zone, 'monitor_btle_devices') == 'true'):
+            monitor = True
+    else:
+        if (configParser.get(zone, 'monitor_bt_devices') == 'true'):
+            monitor = True
+    if ((monitor_known | monitor_unknown) & monitor):
+        msg = nickname + " (" + ubertoothName + macaddr + ") " + " detected"
+        eligibility = True
+
+    return eligibility, msg
+
+#sends the appropriate message based on zone settings
+def send_message(configParser,zone,msg):
+    notification_channels = configParser.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
+    for channel in notification_channels:
+        if channel == "email":
+            print("Sent Email, " + msg)  # placeholders  until we set up messaging service
+        elif channel == "sms":
+            print("Sent SMS,  " + msg)
+        elif channel == "signal":
+            print("Sent SMS,  " + msg)
+            # Format message into notification server JSON
+            # Connect to notification server socket
+            # Send notification message.
 
 
 # Process Received Message
 def process_message(message):
     message_json = json.loads(message)
+    configParser = configparser.RawConfigParser()
+    configFilePath = r'zones.conf.example'
+    configParser.read(configFilePath)
+    zone = 'DEFAULT'
+    notify = False
     if get_message_type(message) == "kismet":
-        device_name = message_json['kismet.device.base.commonname']
+        message_json = message['NEW_DEVICE']
         device_mac = message_json['kismet.device.base.macaddr']
-        detected_by_uuid = message_json['kismet.device.seenby']
+        detected_by_uuid = message_json['kismet.device.base.seenby'][0]['kismet.common.seenby.uuid']
+        device_known,nickname = device_status_k(device_mac)
         # Determine which zone has detected the device from the configured zones
+        for section in configParser.sections():
+            if section != 'DEFAULT':
+                if detected_by_uuid == configParser.get(section,'zone_uuid'):
+                   zone = section
         # Determine the notification settings for that zone
-        # If notification settings for zone demand a notification be sent:
-            # Format message into notification server JSON
-            # Connect to notification server socket
-            # Send notification message.
-
+        dev_type = message_json['kismet.device.base.type']
+        sendMsg, msg = message_elegibility(dev_type,configParser,zone,device_known,nickname,device_mac,"")
+        if(sendMsg):
+            send_message(configParser,zone, msg)
     elif get_message_type(message) == "ubertooth":
         print("Working...")
-        # Determine if device is known or not
-        # Grab the default Zone config settings since we don't attach a UUID to these messages
-        # If notification settings demand notification be sent:
-            # Format message into notification server JSON
-            # Connect to notification server socket
-            # Send notification message
+        zone = 'DEFAULT'
+        dev_type = 'BT'
+        for i in range(0, len(message_json['scan_results'])):
+            device_mac = message_json['scan_results'][i]['mac']
+            try:
+                ubertooth_name =message_json['scan_results'][i]['name'] + ": "
+            except:
+                ubertooth_name=""
+            device_known, nickname = device_status_u(device_mac, configParser.get(zone, 'ignore_devices_with_unknown_uap'))
+            sendMsg, msg = message_elegibility(dev_type, configParser, zone, device_known, nickname,device_mac,ubertooth_name)
+            if(sendMsg):
+                send_message(configParser, zone, msg)
     else:
         print("Received a message of unknown type, ignoring.")
 
