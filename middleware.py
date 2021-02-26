@@ -40,7 +40,7 @@ def device_status_u(device_name,ignore_uap):
     configFilePath = r'devices.conf.example'
     configParser.read(configFilePath)
     device_known = False
-    device_nickname = ''
+    device_nickname = "Unknown Device"
     # checks all sections(devices) in configparser to see if macaddr detected is equal
     for section in configParser.sections():
         macaddr = configParser.get(section, 'device_macaddr')
@@ -58,6 +58,7 @@ def device_status_k(device_name):
     configFilePath = r'devices.conf.example'
     configParser.read(configFilePath)
     device_known = False
+    device_nickname = "Unknown Device"
     for section in configParser.sections():
         if configParser.get(section,'device_macaddr') == device_name:
             device_known = True
@@ -65,20 +66,20 @@ def device_status_k(device_name):
     return device_known,device_nickname
 
 #determine whether the message requires notificaiton
-def message_elegibility(dev_type, configParser, zone,device_known, nickname):
+def message_elegibility(dev_type, configParser, zone,device_known, nickname,macaddr, ubertoothName):
     eligibility = False
+    monitor_unknown = not device_known & (configParser.get(zone, 'alert_on_unrecognized') == 'true')
+    monitor_known = device_known & (configParser.get(zone, 'alert_on_recognized') == 'true')
     if (dev_type == 'BTLE'):
         if (configParser.get(zone, 'monitor_btle_devices') == 'true'):
             monitor = True
     else:
         if (configParser.get(zone, 'monitor_bt_devices') == 'true'):
             monitor = True
-    if (device_known & (configParser.get(zone, 'alert_on_recognized') == 'true') & monitor):
-        msg = nickname + " detected"
+    if ((monitor_known | monitor_unknown) & monitor):
+        msg = nickname + " (" + ubertoothName + macaddr + ") " + " detected"
         eligibility = True
-    elif (not device_known & (configParser.get(zone, 'alert_on_unrecognized') == 'true') & monitor):
-        msg = 'device unknown!'
-        eligibility = True
+
     return eligibility, msg
 
 #sends the appropriate message based on zone settings
@@ -116,7 +117,7 @@ def process_message(message):
                    zone = section
         # Determine the notification settings for that zone
         dev_type = message_json['kismet.device.base.type']
-        sendMsg, msg = message_elegibility(dev_type,configParser,zone,device_known,nickname)
+        sendMsg, msg = message_elegibility(dev_type,configParser,zone,device_known,nickname,device_mac,"")
         if(sendMsg):
             send_message(configParser,zone, msg)
     elif get_message_type(message) == "ubertooth":
@@ -125,8 +126,12 @@ def process_message(message):
         dev_type = 'BT'
         for i in range(0, len(message_json['scan_results'])):
             device_mac = message_json['scan_results'][i]['mac']
+            try:
+                ubertooth_name =message_json['scan_results'][i]['name'] + ": "
+            except:
+                ubertooth_name=""
             device_known, nickname = device_status_u(device_mac, configParser.get(zone, 'ignore_devices_with_unknown_uap'))
-            sendMsg, msg = message_elegibility(dev_type, configParser, zone, device_known, nickname)
+            sendMsg, msg = message_elegibility(dev_type, configParser, zone, device_known, nickname,device_mac,ubertooth_name)
             if(sendMsg):
                 send_message(configParser, zone, msg)
     else:
