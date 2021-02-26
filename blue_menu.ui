@@ -216,7 +216,7 @@ QPushButton:hover {
           <item>
            <widget class="QStackedWidget" name="stackedWidget">
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="page_1">
              <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -460,7 +460,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QLineEdit" name="lineEdit">
+               <widget class="QLineEdit" name="lineEdit_2">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -481,7 +481,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QLineEdit" name="lineEdit_2">
+               <widget class="QLineEdit" name="lineEdit_3">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -502,7 +502,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QSpinBox" name="spinBox">
+               <widget class="QSpinBox" name="spinBox_1">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>

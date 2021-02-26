@@ -21,19 +21,37 @@ class MainWindow(QMainWindow):
         self.ui.save_2.clicked.connect(self.saveSettings)
         self.show()
     def saveZones(self):
-        # save zones config
+        # inputted preferences to save
+        zoneName = self.ui.lineEdit_1.text()
+        alertKnown = self.ui.checkBox_1.isChecked()
+        alertUnkown = self.ui.checkBox_2.isChecked()
+        trackBle = self.ui.checkBox_3.isChecked()
+        trackStandard = self.ui.checkBox_4.isChecked()
+        emailNotif = self.ui.checkBox_5.isChecked()
+        smsNotif = self.ui.checkBox_6.isChecked()
+        # write inputs to zone config file
+        #
         print("Zones saved")
     def saveSettings(self):
-        # save settings config
+        # inputted preferences to save
+        email = self.ui.lineEdit_2.text()
+        phone = self.ui.lineEdit_3.text()
+        maxDevices = self.ui.spinBox_1.value()
+        devTimeout = self.ui.spinBox_2.value()
+        # write inputs to settings config file (phone needs error handling)
+        #
         print("Settings saved")
     def onChange(self,index):
         # update the new page
         if(index == 0):
             print("on page 1")
+            #loadZones()
         elif(index == 1):
             print("on page 2")
+            #loadSettings()
         elif(index == 2):
             print("on page 3")
+            #displayDevices()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
