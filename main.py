@@ -34,14 +34,23 @@ class MainWindow(QMainWindow):
         zoneConfig.read('zones.conf.example')
         # zone / config section name
         section = self.ui.comboBox.currentText()
-        # can't rename default
+        # can't rename default zone or set uuid
         if section == "DEFAULT":
             self.ui.lineEdit_1.setEnabled(False)
+            self.ui.lineEdit_4.setEnabled(False)
+            self.ui.lineEdit_4.clear()
         else:
             self.ui.lineEdit_1.setEnabled(True)
-            ### NOTE: create new section if user just added a zone, it wouldnt have uuid so do what? ###
+            self.ui.lineEdit_4.setEnabled(True)
+            # create new section if user just added a zone
             if not zoneConfig.has_section(section):
-                zoneConfig.add_section(section)
+                zoneConfig.add_section(section.lower())
+                zoneConfig.set(section,'zone_name',section.Title())
+                zoneConfig.set(section,'zone_uuid','XXXXXXXX-0000-0000-0000-XXXXXXXXXXXX')
+                with open('zones.conf.example','w') as configFile:
+                    zoneConfig.write(configFile)
+            else: # display uuid
+                self.ui.lineEdit_4.setText(zoneConfig.get(section,'zone_uuid'))
         # display section name
         self.ui.lineEdit_1.setText(section)
         # keep original name as placeholder in case of edit
@@ -89,40 +98,53 @@ class MainWindow(QMainWindow):
         
 
     def displayDevices(self):
-        # should this read from devices.conf? what about unknown dev
-        # deviceConfig = configparser.ConfigParser()
-        # deviceConfig.read('devices.conf.example')
+        # read from kismet API
         print('devices displayed')
 
     def saveZones(self):
         # inputted preferences to save
-        zoneName = self.ui.lineEdit_1.text()
+        currentZone = self.ui.lineEdit_1.text()
+        oldZone = self.ui.lineEdit_1.placeholderText()
         alertKnown = self.ui.checkBox_1.isChecked()
-        alertUnkown = self.ui.checkBox_2.isChecked()
+        alertUnknown = self.ui.checkBox_2.isChecked()
         trackBle = self.ui.checkBox_3.isChecked()
         trackStandard = self.ui.checkBox_4.isChecked()
         emailNotif = self.ui.checkBox_5.isChecked()
         smsNotif = self.ui.checkBox_6.isChecked()
+        uuid = self.ui.lineEdit_4.text()
         # write inputs to zone config file
-        # if zoneName != placeholder text then rename section
-        """
-        def rename_section(cp, section_from, section_to):
-
-            items = cp.items(section_from)
-
-            cp.add_section(section_to)
-
+        zoneConfig = configparser.ConfigParser()
+        zoneConfig.read('zones.conf.example')
+        # section renamed, update name
+        if currentZone != oldZone:
+            items = zoneConfig.items(oldZone)
+            zoneConfig.add_section(currentZone)
             for item in items:
-                cp.set(section_to, item[0], item[1])
-
-            cp.remove_section(section_from)
-        """
-        # make a change, can use deviceConfig.sections(), and can use devicecConfig.get(section, option)
-        # deviceConfig.set('phone','device_name','Samsung Galaxy S21')
-        # save change
-        # with open('devices.conf.example','w') as configFile:
-        #   config.write(deviceConfig)
-        #
+                zoneConfig.set(currentZone, item[0], item[1])
+            zoneConfig.remove_section(oldZone)
+        # alert known device
+        if zoneConfig.getboolean("DEFAULT",'alert_on_recognized') != alertKnown:
+            zoneConfig.set(currentZone,'alert_on_recognized',str(alertKnown).lower())
+        # alert unkown device
+        if zoneConfig.getboolean("DEFAULT",'alert_on_unrecognized') != alertUnknown:
+            zoneConfig.set(currentZone,'alert_on_unrecognized',str(alertUnknown).lower())
+        # track ble
+        if zoneConfig.getboolean("DEFAULT",'monitor_btle_devices') != trackBle:
+            zoneConfig.set(currentZone,'monitor_btle_devices',str(trackBle).lower())
+        # track standard bt
+        if zoneConfig.getboolean("DEFAULT",'monitor_bt_devices') != trackStandard:
+            zoneConfig.set(currentZone,'monitor_bt_devices',str(trackStandard).lower())
+        # notification settings
+        channels = []
+        if emailNotif : channels.append("email")
+        if smsNotif   : channels.append("sms")
+        zoneConfig.set(currentZone,'notification_channels',str(channels).replace("'","\""))
+        # uuid
+        if currentZone != "DEFAULT":
+            zoneConfig.set(currentZone,'zone_uuid',uuid)
+        # save changes
+        with open('zones.conf.example','w') as configFile:
+                    zoneConfig.write(configFile)
         print("Zones saved")
 
     def saveSettings(self):
@@ -131,25 +153,36 @@ class MainWindow(QMainWindow):
         phone = self.ui.lineEdit_3.text()
         maxDevices = self.ui.spinBox_1.value()
         devTimeout = self.ui.spinBox_2.value()
-
+        
         # write inputs to settings config file (phone needs error handling)
         os.environ['EMAIL_USERNAME'] = email
         os.environ['TWILIO_PHONE'] = phone
         set_key(find_dotenv(),'EMAIL_USERNAME',email)
         set_key(find_dotenv(),'TWILIO_PHONE',phone)
 
+        # read and then write over kismet settings, replacing with new info
+        with open("kismet_site.conf.example","r+") as stream:
+            kismetConfig = stream.read()
+            stream.seek(0)
+            # device timeout
+            timeoutIdx = kismetConfig.index("tracker_d")+23
+            kismetConfig= kismetConfig[:timeoutIdx]+str(devTimeout)+kismetConfig[kismetConfig.index('\n',timeoutIdx):]
+            # max devices
+            maxdevIdx = kismetConfig.index("tracker_m")+20
+            kismetConfig= kismetConfig[:maxdevIdx]+str(maxDevices)+kismetConfig[kismetConfig.index('\n',maxdevIdx):]
+            # update config file
+            stream.write(kismetConfig)
+            stream.truncate()
+
         print("Settings saved")
 
     def onChange(self,index):
         # update the current page
         if(index == 0):
-            print("on zones page")
             self.loadZones()
         elif(index == 1):
-            print("on settings page")
             self.loadSettings()
         elif(index == 2):
-            print("on display page")
             self.displayDevices()
 
 if __name__ == "__main__":

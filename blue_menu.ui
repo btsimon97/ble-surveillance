@@ -427,6 +427,33 @@ QPushButton:hover {
                 </property>
                </widget>
               </item>
+              <item alignment="Qt::AlignHCenter">
+               <widget class="QLineEdit" name="lineEdit_4">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::StrongFocus</enum>
+                </property>
+                <property name="contextMenuPolicy">
+                 <enum>Qt::DefaultContextMenu</enum>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="placeholderText">
+                 <string>UUID</string>
+                </property>
+               </widget>
+              </item>
               <item>
                <widget class="QPushButton" name="save_1">
                 <property name="sizePolicy">
