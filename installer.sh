@@ -175,7 +175,7 @@ systemctl start kismet
 echo "Waiting for kismet startup to complete..."
 #Loop until we can hit Kismet's API (should return a 401 when kismet is up)
 #Note that curl will return 0 here even though an HTTP error code is received.
-while True; do
+while true; do
   curl http://localhost:2501/system/status.json > /dev/null 2>&1 && break
   sleep 0.5
 done
