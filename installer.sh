@@ -94,7 +94,7 @@ fi
 GROUP_MEMS="$(groupmems -g kismet -l)"
 if [[ "$GROUP_MEMS" != *"$PROG_USERNAME"* ]]; then
 	echo "Adding $PROG_USERNAME to kismet group..."
-	adduser $KISMET_USERNAME kismet
+	adduser $PROG_USERNAME kismet
 	#groupmems has a weird quirk with PAM on Debian based OSes, so we use
 	#adduser now instead. You can uncomment the groupmems line if you want
 	#The old behavior, but remember to comment the adduser line first.
@@ -109,7 +109,7 @@ fi
 GROUP_MEMS="$(groupmems -g dialout -l)"
 if [[ "$GROUP_MEMS" != *"$PROG_USERNAME"* ]]; then
 	echo "Adding $PROG_USERNAME to dialout group..."
-	adduser $KISMET_USERNAME dialout
+	adduser $PROG_USERNAME dialout
 	#groupmems has a weird quirk with PAM on Debian based OSes, so we use
 	#adduser now instead. You can uncomment the groupmems line if you want
 	#The old behavior, but remember to comment the adduser line first.
@@ -130,7 +130,6 @@ fi
 
 
 #Deploy the tmpfiles config and reload systemd's config
-rm /lib/tmpfiles.d/bt-surveillance.conf
 cp bluemon.conf.systemd-tmpfiles /lib/tmpfiles.d/bluemon.conf
 systemd-tmpfiles --create --remove --boot
 
