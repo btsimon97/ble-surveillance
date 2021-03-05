@@ -175,7 +175,7 @@ systemctl enable kismet
 systemctl start kismet
 KISMET_ADMIN_PASSWORD="$(openssl rand -hex 20)"
 curl -d "username=admin&password=$KISMET_ADMIN_PASSWORD" http://localhost:2501/session/set_password
-API_TOKEN= "$(curl -f -d 'json={"name": "bluemon", "role": "readonly", duration: 0}' http://admin:$KISMET_ADMIN_PASSWORD@localhost:2501/auth/apikey/generate.cmd)"
+API_TOKEN="$(curl -f -d 'json={"name": "bluemon", "role": "readonly", duration: 0}' http://admin:$KISMET_ADMIN_PASSWORD@localhost:2501/auth/apikey/generate.cmd)"
 if [ $? != 0 ]; then
   echo "Failed to generate Kismet API token for Bluemon Services."
   echo "Check Kismet's documentation to determine how to do this manually."
