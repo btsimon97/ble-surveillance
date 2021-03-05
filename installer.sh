@@ -7,6 +7,7 @@
 PROG_USERNAME=bluemon
 PROG_GROUPNAME=bluemon
 PROG_DATA_DIR="/var/lib/bluemon"
+PROG_EXEC_DIR="/opt/bluemon"
 KISMET_APT_PKGS="kismet"
 PIP_APT_PKGNAME=python3-pip
 KISMET_PIP_PKGNAME=kismetexternal
@@ -97,7 +98,7 @@ if [ $? != 0 ]; then
 	chown -R $PROG_USERNAME:$PROG_GROUPNAME $PROG_DATA_DIR
 	chmod -R 750 $PROG_DATA_DIR
 	mkdir $PROG_DATA_DIR/kismet-logs
-	chown -R $PROG_USERNAME:$PROG_PROG_GROUPNAME $PROG_DATA_DIR/kismet-logs
+	chown -R $PROG_USERNAME:$PROG_GROUPNAME $PROG_DATA_DIR/kismet-logs
 	chmod -R 750 $PROG_DATA_DIR/kismet-logs
 fi
 
@@ -107,22 +108,31 @@ rm /lib/tmpfiles.d/bt-surveillance.conf
 cp bluemon.conf.systemd-tmpfiles /lib/tmpfiles.d/bluemon.conf
 systemd-tmpfiles --create --remove --boot
 
+#Check if directory where bluemon executables stored exists, create if not
+ls $PROG_EXEC_DIR > /dev/null 2>&1
+if [ $? != 0 ]; then
+  echo "Creating directory $PROG_EXEC_DIR..."
+  mkdir -p $PROG_EXEC_DIR
+  chown -R $PROG_USERNAME:$PROG_GROUPNAME $PROG_EXEC_DIR
+  chmod 750 $PROG_EXEC_DIR
+fi
+
 #Install service executables (this will overwrite any existing binary)
-rm /bin/bt-surveillance
-cp bluemon-kismet.py /bin/bluemon-kismet
-cp bluemon-unix.py /bin/bluemon-unix
-cp bluemon-ubertooth-scan.sh /bin/bluemon-ubertooth-scan
-chmod +x /bin/bluemon-kismet
-chmod +x /bin/bluemon-unix
-chmod +x /bin/bluemon-ubertooth-scan
+cp bluemon-kismet.py $PROG_EXEC_DIR/bluemon-kismet
+cp bluemon-unix.py $PROG_EXEC_DIR/bluemon-unix
+cp bluemon-ubertooth-scan.sh $PROG_EXEC_DIR/bluemon-ubertooth-scan
+cp -r notifications $PROG_EXEC_DIR
+chmod +x $PROG_EXEC_DIR/bluemon-kismet
+chmod +x $PROG_EXEC_DIR/bluemon-unix
+chmod +x $PROG_EXEC_DIR/bluemon-ubertooth-scan
+chmod +x $PROG_EXEC_DIR/notifications/notifications.py
 
 #Install the systemd services
-rm /etc/systemd/system/bt-surveillance.service
 cp bluemon-kismet.service /etc/systemd/system/
 cp bluemon-unix.service /etc/systemd/system/
 cp bluemon-unix.socket /etc/systemd/system
 cp bluemon-notify.service /etc/systemd/system
-cp bluemon-notify.socket /etc/systemd/system
+#cp bluemon-notify.socket /etc/systemd/system
 systemctl daemon-reload
 
 #Create the config directory and copy the sample configs
@@ -159,7 +169,7 @@ sed -i "s/password = kismet/password=$KISMET_ADMIN_PASSWORD" /etc/bluemon/bluemo
 #systemctl start bluemon-kismet.service
 
 #Install the crontab entry (commented out)
-echo "#*/2 * * * *	bluemon	/bin/bluemon-ubertooth-scan" >> /etc/crontab
+echo "#*/2 * * * *	bluemon	/opt/bluemon/bluemon-ubertooth-scan" >> /etc/crontab
 
 #Install is done, provide post-install instructions to user and exit.
 echo "Installation Complete!"

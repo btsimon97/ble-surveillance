@@ -16,7 +16,7 @@ Requires=bluemon-unix.socket
 #Startup type for service (simple in this case)
 Type=simple
 #Where the executable is we need to start, along with any args to pass
-ExecStart=/usr/bin/bluemon-unix
+ExecStart=/opt/bluemon/bluemon-unix
 #What the working directory for this service should be. Usually under /run
 WorkingDirectory=/run/bluemon/
 #What user and group we should be running the service as
