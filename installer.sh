@@ -41,16 +41,19 @@ else
 	echo "PIP3 already installed, continuing..."
 fi
 
+#Replace this with loading from requirements.txt once specifics of using a venv
+#are worked out. For now this should be left commented out since we don't use
+#this pip package anymore.
 # Check if kismetexternal pip package is installed, install if not present
 # If present, update to latest version.
-pip3 show kismetexternal > /dev/null 2>&1
-if [ $? != 0 ]; then
-	echo "Installing kismetexternal python package from pip..."
-	pip3 install kismetexternal
-else
-	echo "Updating installed kismetexernal python package..."
-	pip3 install kismetexternal --upgrade --upgrade-strategy=eager
-fi
+#pip3 show kismetexternal > /dev/null 2>&1
+#if [ $? != 0 ]; then
+#	echo "Installing kismetexternal python package from pip..."
+#	pip3 install kismetexternal
+#else
+#	echo "Updating installed kismetexernal python package..."
+#	pip3 install kismetexternal --upgrade --upgrade-strategy=eager
+#fi
 
 # Check if user already exists, create if it does not
 
@@ -84,6 +87,21 @@ GROUP_MEMS="$(groupmems -g kismet -l)"
 if [[ "$GROUP_MEMS" != *"$PROG_USERNAME"* ]]; then
 	echo "Adding $PROG_USERNAME to kismet group..."
 	adduser $KISMET_USERNAME kismet
+	#groupmems has a weird quirk with PAM on Debian based OSes, so we use
+	#adduser now instead. You can uncomment the groupmems line if you want
+	#The old behavior, but remember to comment the adduser line first.
+	#groupmems -g $PROG_GROUPNAME -a $PROG_USERNAME
+fi
+
+#For some capture devices that use a serial interface, kismet needs to be
+#in the dialout group on Debian OSes so it can attach to the serial device
+#under /dev. This is mainly just the nordic RF right now, but other devices
+#might need this as well. This will make sure what we run kismet as will be in
+#the right group for this to work properly.
+GROUP_MEMS="$(groupmems -g dialout -l)"
+if [[ "$GROUP_MEMS" != *"$PROG_USERNAME"* ]]; then
+	echo "Adding $PROG_USERNAME to dialout group..."
+	adduser $KISMET_USERNAME dialout
 	#groupmems has a weird quirk with PAM on Debian based OSes, so we use
 	#adduser now instead. You can uncomment the groupmems line if you want
 	#The old behavior, but remember to comment the adduser line first.
