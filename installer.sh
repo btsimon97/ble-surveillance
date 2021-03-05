@@ -10,6 +10,7 @@ PROG_DATA_DIR="/var/lib/bluemon"
 PROG_EXEC_DIR="/opt/bluemon"
 KISMET_APT_PKGS="kismet"
 PIP_APT_PKGNAME=python3-pip
+PROG_DEPENDENCIES=curl
 KISMET_PIP_PKGNAME=kismetexternal
 #End Script Constants Declaration
 
@@ -23,13 +24,20 @@ if [ `whoami` != root ]; then
 	exit
 fi
 
-# Check if Kismet and its plugins are installed, install if not present
+# Check if Kismet and its dependencies are installed, install if not present
 dpkg -s $KISMET_APT_PKGS > /dev/null 2>&1
 if [ $? != 0 ]; then
 	echo "Installing Kismet Packages..."
 	apt install -y $KISMET_APT_PKGS
 else
 	echo "Kismet Packages already installed, continuing..."
+fi
+dpkg -s $PROG_DEPENDENCIES > /dev/null 2>&1
+if [ $? != 0 ]; then
+  echo "Installing Program Dependencies..."
+  apt install -y $PROG_DEPENDENCIES
+else
+  echo "Dependencies already installed, continuing..."
 fi
 
 # Check if pip3 is installed, install if not present
@@ -177,7 +185,7 @@ fi
 #Set kismet password for Bluemon
 cp /etc/bluemon/bluemon.conf.example /etc/bluemon/bluemon.conf
 sed -i "s/username = kismet/username=admin/" /etc/bluemon/bluemon.conf
-sed -i "s/password = kismet/password=$KISMET_ADMIN_PASSWORD" /etc/bluemon/bluemon.conf
+sed -i "s/password = kismet/password=$KISMET_ADMIN_PASSWORD/" /etc/bluemon/bluemon.conf
 #Eventually we'll be using Kismet API tokens instead of the kismet username and password.
 #The following line (currently commented out) will do the the config work to
 #set the API token in Bluemon's config.
