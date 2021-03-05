@@ -172,6 +172,10 @@ sed -i "s/root/$PROG_USERNAME/" /usr/lib/systemd/system/kismet.service
 cp kismet_site.conf.example /etc/kismet/kismet_site.conf
 systemctl enable kismet
 systemctl start kismet
+#Sleep for 30 seconds to give kismet time to startup on slow devices.
+#Note: replace with curl while loop??
+echo "Waiting for kismet startup to complete..."
+sleep 30
 KISMET_ADMIN_PASSWORD="$(openssl rand -hex 20)"
 curl -d "username=admin&password=$KISMET_ADMIN_PASSWORD" http://localhost:2501/session/set_password
 API_TOKEN="$(curl -f -d 'json={"name": "bluemon", "role": "readonly", duration: 0}' http://admin:$KISMET_ADMIN_PASSWORD@localhost:2501/auth/apikey/generate.cmd)"
