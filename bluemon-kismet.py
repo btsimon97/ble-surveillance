@@ -65,7 +65,7 @@ async def kismet_websocket(configuration):
                     while True:
                         try:
                             kismet_message = await websocket.recv()
-                            print(kismet_message)  # replace this with a function call to the processing function.
+                            print(kismet_message, flush=True)  # replace this with function call to processing function.
                         except websockets.exceptions.ConnectionClosed:
                             print("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")
                             break

@@ -192,7 +192,7 @@ cp /etc/bluemon/bluemon.conf.example /etc/bluemon/bluemon.conf
 #Eventually we'll be using Kismet API tokens instead of the kismet username and password.
 #The following line (currently commented out) will do the the config work to
 #set the API token in Bluemon's config.
-sed -i "s/api_token = none/api_token=$API_TOKEN" /etc/bluemon/bluemon.conf
+sed -i "s/api_token = none/api_token=$API_TOKEN/" /etc/bluemon/bluemon.conf
 
 #Start the Service (Can't do this until config files have been setup).
 #systemctl start bluemon-kismet.service
