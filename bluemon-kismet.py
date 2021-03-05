@@ -28,8 +28,7 @@ async def kismet_websocket(configuration):
     if configuration['kismet'].getboolean('use_tls'):
         uri = "wss://" + configuration['kismet']['server_name'] + ":" \
                        + configuration['kismet']['server_port'] + "/eventbus/events.ws?" \
-                       + "user=" + configuration['kismet']['username'] \
-                       + "&password=" + configuration['kismet']['password']
+                       + "KISMET=" + configuration['kismet']['api_token']
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         ssl_ca_cert = pathlib.Path(__file__).with_name(configuration['kismet']['tls_cert_file'])
         ssl_context.load_verify_locations(ssl_ca_cert)
@@ -55,8 +54,7 @@ async def kismet_websocket(configuration):
     else:
         uri = "ws://" + configuration['kismet']['server_name'] + ":" \
                        + configuration['kismet']['server_port'] + "/eventbus/events.ws?" \
-                       + "user=" + configuration['kismet']['username'] \
-                       + "&password=" + configuration['kismet']['password']
+                       + "KISMET=" + configuration['kismet']['api_token']
         # The actual websocket handling routine
         while True:
             try:
