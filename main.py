@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
             # create new section if user just added a zone
             if not zoneConfig.has_section(section):
                 zoneConfig.add_section(section.lower())
-                zoneConfig.set(section,'zone_name',section.Title())
+                zoneConfig.set(section,'zone_name',section.lower())
                 zoneConfig.set(section,'zone_uuid','XXXXXXXX-0000-0000-0000-XXXXXXXXXXXX')
                 with open('zones.conf.example','w') as configFile:
                     zoneConfig.write(configFile)
@@ -80,7 +80,7 @@ class MainWindow(QMainWindow):
         zoneConfig.read('zones.conf.example')
         self.ui.comboBox.addItem('DEFAULT')
         self.ui.comboBox.addItems(zoneConfig.sections())
-        self.indexChanged(self.ui.comboBox.currentIndex())
+        self.indexChanged(0)
 
     def loadSettings(self):
         email = os.environ.get('EMAIL_USERNAME')
@@ -179,7 +179,7 @@ class MainWindow(QMainWindow):
     def onChange(self,index):
         # update the current page
         if(index == 0):
-            self.loadZones()
+            self.indexChanged(0) # load zone
         elif(index == 1):
             self.loadSettings()
         elif(index == 2):
