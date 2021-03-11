@@ -4,7 +4,10 @@ import configparser
 import datetime
 import time
 import signal
+import socket
 
+HOST = '127.0.0.1'        # Localhost
+NOTIFICATION_PORT = 5555  # Notification server port
 
 # Define Signal Handling Function
 def process_signal(signal_number, frame):
@@ -25,6 +28,16 @@ if __name__ == '__main__':
 
 # Read in the config file (this needs to get changed when a production ready version is made)
 config = configparser.ConfigParser()
+
+# Read in the zone config file and assign values into zone_settings variable
+# For production this should be moved into a function which is called in the beginning
+# and then can be called at later times to update values without needing to restart
+# the script
+config.read('zones.conf')
+zone_settings = {}
+for key in config['zone_settings']:
+    zone_settings[key] = config['zone_settings'][key]
+
 config.read('ble-surveillance.conf')
 
 
@@ -153,6 +166,28 @@ def get_new_devices(device_list, last_probe_time):
                     new_devices.append(device)  # add the device to the new devices list
         return new_devices  # return the newly discovered devices
 
+def send_detection_message(device_data):
+
+    message = {
+        'message_type': 'detection',
+        'zone_name': zone_settings['zone_name'],
+        'channel': zone_settings['notification_channels'],
+        'devices': device_data
+    }
+
+    if "email" in zone_settings['notification_channels']:
+        message['email_data'] = {
+            'recipient': 'juansuhr@gmail.com'
+        }
+
+    if "sms" in zone_settings['notification_channels']:
+        message['sms_data'] = {
+            'recipient': '7866195838'
+        }
+    
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, NOTIFICATION_PORT))
+        s.sendall(str.encode(json.dumps(message)))
 
 # initialize the API URL and other important constants that will be reused
 api_url = build_api_base_url(config)
@@ -174,5 +209,5 @@ while True:
     devices = get_devices(api_url, bluetooth_api_endpoints, config)  # refresh the list of all devices
     fresh_devices = get_new_devices(devices, last_api_probe)  # get the list of devices that are new since last probe
     if fresh_devices:  # check if we have new devices to print.
-        print(json.dumps(fresh_devices, indent=2))  # print new devices to console (replace with notification code)
+        send_detection_message(json.dumps(fresh_devices, indent=2))  # send detection message to notification server
     last_api_probe = datetime.datetime.now()  # update last probe timestamp to be now since we just finished a probe
