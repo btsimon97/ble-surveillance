@@ -10,7 +10,7 @@ PROG_DATA_DIR="/var/lib/bluemon"
 PROG_EXEC_DIR="/opt/bluemon"
 KISMET_APT_PKGS="kismet"
 PIP_APT_PKGNAME=python3-pip
-PROG_DEPENDENCIES=curl
+PROG_DEPENDENCIES=curl python3-venv python3-wheel python3-setuptools
 KISMET_PIP_PKGNAME=kismetexternal
 #End Script Constants Declaration
 
@@ -62,6 +62,12 @@ fi
 #	echo "Updating installed kismetexernal python package..."
 #	pip3 install kismetexternal --upgrade --upgrade-strategy=eager
 #fi
+
+#Create the venv and load the dependencies
+python3 -m venv $PROG_EXEC_DIR/venv
+source $PROG_EXEC_DIR/venv/bin/activate
+pip3 install -r requirements.txt
+deactivate
 
 # Check if user already exists, create if it does not
 
