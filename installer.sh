@@ -9,9 +9,8 @@ PROG_GROUPNAME=bluemon
 PROG_DATA_DIR="/var/lib/bluemon"
 PROG_EXEC_DIR="/opt/bluemon"
 KISMET_APT_PKGS="kismet"
-PIP_APT_PKGNAME=python3-pip
-PROG_DEPENDENCIES=curl python3-venv python3-wheel python3-setuptools
-KISMET_PIP_PKGNAME=kismetexternal
+PIP_APT_PKGNAME="python3-pip"
+PROG_DEPENDENCIES="curl python3-venv python3-wheel python3-setuptools"
 #End Script Constants Declaration
 
 # cd to script location so file copy commands work
@@ -48,20 +47,6 @@ if [ $? != 0 ]; then
 else
 	echo "PIP3 already installed, continuing..."
 fi
-
-#Replace this with loading from requirements.txt once specifics of using a venv
-#are worked out. For now this should be left commented out since we don't use
-#this pip package anymore.
-# Check if kismetexternal pip package is installed, install if not present
-# If present, update to latest version.
-#pip3 show kismetexternal > /dev/null 2>&1
-#if [ $? != 0 ]; then
-#	echo "Installing kismetexternal python package from pip..."
-#	pip3 install kismetexternal
-#else
-#	echo "Updating installed kismetexernal python package..."
-#	pip3 install kismetexternal --upgrade --upgrade-strategy=eager
-#fi
 
 #Create the venv and load the dependencies
 python3 -m venv $PROG_EXEC_DIR/venv
