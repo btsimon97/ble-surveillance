@@ -149,12 +149,12 @@ if [ $? != 0 ]; then
 fi
 
 #Install service executables (this will overwrite any existing binary)
-cp bluemon-kismet.py $PROG_EXEC_DIR/bluemon-kismet
-cp bluemon-unix.py $PROG_EXEC_DIR/bluemon-unix
+cp bluemon-kismet.py $PROG_EXEC_DIR/bluemon-kismet.py
+cp bluemon-unix.py $PROG_EXEC_DIR/bluemon-unix.py
 cp bluemon-ubertooth-scan.sh $PROG_EXEC_DIR/bluemon-ubertooth-scan
 cp -r notifications $PROG_EXEC_DIR
-chmod +x $PROG_EXEC_DIR/bluemon-kismet
-chmod +x $PROG_EXEC_DIR/bluemon-unix
+chmod +x $PROG_EXEC_DIR/bluemon-kismet.py
+chmod +x $PROG_EXEC_DIR/bluemon-unix.py
 chmod +x $PROG_EXEC_DIR/bluemon-ubertooth-scan
 chmod +x $PROG_EXEC_DIR/notifications/notifications.py
 
