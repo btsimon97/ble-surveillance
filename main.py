@@ -19,6 +19,8 @@ class MainWindow(QMainWindow):
         self.ui.stackedWidget.currentChanged.connect(self.onChange)
         # on zone switch load respective settings
         self.ui.comboBox.currentIndexChanged.connect(self.indexChanged)
+        # when selected device changed
+        self.ui.listWidget_1.currentItemChanged.connect(self.displayDetails)
         # on tab button click switch to respective tab
         self.ui.btn_page_1.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.page_1))
         self.ui.btn_page_2.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.page_2))
@@ -95,9 +97,22 @@ class MainWindow(QMainWindow):
         self.ui.spinBox_1.setValue(config.getint('top','tracker_max_devices'))
         # timeout
         self.ui.spinBox_2.setValue(config.getint('top','tracker_device_timeout'))
-        
 
-    def displayDevices(self):
+    def displayDetails(self): # details of select device in list
+        self.ui.listWidget_2.clear()
+        devices = configparser.ConfigParser()
+        devices.read('devices.conf.example')
+        section = devices.sections()[self.ui.listWidget_1.currentRow()]
+        self.ui.listWidget_2.addItem("Device: " + devices.get(section,'device_name'))
+        self.ui.listWidget_2.addItem("MAC address: " + devices.get(section,'device_macaddr'))
+
+    def displayDevices(self): # get list of devices and display nicknames that can be selected
+        self.ui.listWidget_1.clear()
+        devices = configparser.ConfigParser()
+        devices.read('devices.conf.example')
+        for section in devices.sections():
+            self.ui.listWidget_1.addItem(devices.get(section,'device_nickname'))
+
         # read from kismet API
         print('devices displayed')
 
