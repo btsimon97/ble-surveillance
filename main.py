@@ -113,9 +113,6 @@ class MainWindow(QMainWindow):
         for section in devices.sections():
             self.ui.listWidget_1.addItem(devices.get(section,'device_nickname'))
 
-        # read from kismet API
-        print('devices displayed')
-
     def saveZones(self):
         # inputted preferences to save
         currentZone = self.ui.lineEdit_1.text()
