@@ -78,6 +78,10 @@ if [ ! -f /etc/apt/sources.list.d/kismet.list ]; then
       ;;
   esac
 fi
+# Update the APT package lists before we go further, in case user hasn't
+# pulled updated package manifests in a while.
+apt update
+
 # Check if Kismet and its dependencies are installed, install if not present
 if ! dpkg -s $KISMET_APT_PKGS > /dev/null 2>&1; then
 	echo "Installing Kismet Packages..."
@@ -88,7 +92,7 @@ fi
 
 if ! dpkg -s "$PROG_DEPENDENCIES" > /dev/null 2>&1; then
   echo "Installing Program Dependencies..."
-  apt install -y "$PROG_DEPENDENCIES"
+  apt install -y $PROG_DEPENDENCIES
 else
   echo "Dependencies already installed, continuing..."
 fi
