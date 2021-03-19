@@ -47,7 +47,6 @@ def message_eligibility(dev_type, configParser, zone, device_known, nickname, ma
         eligibility = True
     else:
         msg = "Ignoring Device event due to zone config settings."
-        eligibility = False
 
     return eligibility, msg
 
