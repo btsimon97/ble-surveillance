@@ -79,14 +79,14 @@ if [ ! -f /etc/apt/sources.list.d/kismet.list ]; then
   esac
 fi
 # Check if Kismet and its dependencies are installed, install if not present
-if dpkg -s $KISMET_APT_PKGS > /dev/null 2>&1; then
+if ! dpkg -s $KISMET_APT_PKGS > /dev/null 2>&1; then
 	echo "Installing Kismet Packages..."
 	apt install -y $KISMET_APT_PKGS
 else
 	echo "Kismet Packages already installed, continuing..."
 fi
 
-if dpkg -s "$PROG_DEPENDENCIES" > /dev/null 2>&1; then
+if ! dpkg -s "$PROG_DEPENDENCIES" > /dev/null 2>&1; then
   echo "Installing Program Dependencies..."
   apt install -y "$PROG_DEPENDENCIES"
 else
@@ -94,7 +94,7 @@ else
 fi
 
 # Check if pip3 is installed, install if not present
-if dpkg -s $PIP_APT_PKGNAME > /dev/null 2>&1; then
+if ! dpkg -s $PIP_APT_PKGNAME > /dev/null 2>&1; then
 	echo "Installing PIP3..."
 	apt install -y $PIP_APT_PKGNAME
 else
@@ -108,16 +108,14 @@ pip3 install -r requirements.txt
 deactivate
 
 # Check if user already exists, create if it does not
-
-if getent passwd $PROG_USERNAME > /dev/null 2>&1; then
+if ! getent passwd $PROG_USERNAME > /dev/null 2>&1; then
 	echo "Creating user $PROG_USERNAME..."
 	useradd -d $PROG_DATA_DIR -r $PROG_USERNAME
 	chsh -s /sbin/nologin $PROG_USERNAME
 fi
 
 #Check if group already exists, create if it does not
-
-if getent group $PROG_GROUPNAME > /dev/null 2>&1; then
+if ! getent group $PROG_GROUPNAME > /dev/null 2>&1; then
 	echo "Creating group $PROG_GROUPNAME..."
 	groupadd $PROG_GROUPNAME
 fi
@@ -159,7 +157,7 @@ if [[ "$GROUP_MEMS" != *"$PROG_USERNAME"* ]]; then
 fi
 
 #Check if Kismet data directory exists, create it if not
-if ls $PROG_DATA_DIR > /dev/null 2>&1; then
+if ! ls $PROG_DATA_DIR > /dev/null 2>&1; then
 	echo "Creating kismet data directory"
 	mkdir -p $PROG_DATA_DIR
 	chown -R $PROG_USERNAME:$PROG_GROUPNAME $PROG_DATA_DIR
@@ -175,7 +173,7 @@ cp bluemon.conf.systemd-tmpfiles /lib/tmpfiles.d/bluemon.conf
 systemd-tmpfiles --create --remove --boot
 
 #Check if directory where bluemon executables stored exists, create if not
-if ls $PROG_EXEC_DIR > /dev/null 2>&1; then
+if ! ls $PROG_EXEC_DIR > /dev/null 2>&1; then
   echo "Creating directory $PROG_EXEC_DIR..."
   mkdir -p $PROG_EXEC_DIR
   chown -R $PROG_USERNAME:$PROG_GROUPNAME $PROG_EXEC_DIR
@@ -255,4 +253,3 @@ echo "Your kismet login is:"
 echo -e "\tUsername: admin"
 echo -e "\tPassword: $KISMET_ADMIN_PASSWORD"
 echo "You may need to adjust your firewall to access kismet from other devices."
-
