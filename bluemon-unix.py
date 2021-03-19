@@ -92,7 +92,14 @@ def process_message(message):
     configParser.read(configFilePath)
     zone = 'DEFAULT'
     notify = False
+    detected_by_uuid = message_json['ubertooth_serial_number']
     dev_type = 'BT'
+    # Determine which zone has detected the device from the configured zones
+    for section in configParser.sections():
+        if section != 'DEFAULT':
+            if detected_by_uuid == configParser.get(section,'zone_uuid'):
+                zone = section
+
     for i in range(0, len(message_json['scan_results'])):
         device_mac = message_json['scan_results'][i]['mac']
         try:
