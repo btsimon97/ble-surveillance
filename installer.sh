@@ -10,38 +10,91 @@ PROG_DATA_DIR="/var/lib/bluemon"
 PROG_EXEC_DIR="/opt/bluemon"
 KISMET_APT_PKGS="kismet"
 PIP_APT_PKGNAME="python3-pip"
-PROG_DEPENDENCIES="curl python3-venv python3-wheel python3-setuptools"
+PROG_DEPENDENCIES="curl wget python3-venv python3-wheel python3-setuptools"
 #End Script Constants Declaration
 
 # cd to script location so file copy commands work
 cd "${0%/*}" || exit
 
 # Check to make sure being run with root/sudo perms
-if [ `whoami` != root ]; then
+if [ whoami != root ]; then
 	echo "This script must be run as root or with sudo for it to work."
 	echo "Please re-run this script as root or with sudo"
 	exit
 fi
 
+#Try to determine what Debian based distro we're running so we can add the
+#proper APT repository for kismet.
+DISTRO_NAME=$(cat /etc/os-release | grep -e ^NAME | cut -d \" -f 2)
+DISTRO_VERSION_ID=$(cat /etc/os-release | grep -e ^VERSION_ID | cut -d \" -f 2)
+DISTRO_VERSION_NAME=$(cat /etc/os-release | grep -e ^VERSION_CODENAME | cut -d \" -f 2)
+
+if [ ! -f /etc/apt/sources.list.d/kismet.list ]; then
+  case $DISTRO_NAME in
+    "Ubuntu")
+      case $DISTRO_VERSION_ID in
+        "20.04") #Ubuntu 20.04 (latest LTS version as of right now)
+          echo "Ubuntu 20.04 Detected. Installing Kismet APT repository..."
+
+          wget -O - https://www.kismetwireless.net/repos/kismet-release.gpg.key | apt-key add -
+          echo 'deb https://www.kismetwireless.net/repos/apt/release/focal focal main' | tee /etc/apt/sources.list.d/kismet.list
+          apt update
+          ;;
+        "18.04" | "16.04")
+          echo "This Ubuntu version is not supported for bluemon. Aborting installation..."
+          exit 1
+          ;;
+        *) #versions of Ubuntu newer than 20.04, i.e. 20.10
+          echo "Detected an Ubuntu Release version which does not have a Kismet APT Repository."
+          echo "Defaulting to the Kismet APT Repository for Kali, this may cause issues..."
+          wget -O - https://www.kismetwireless.net/repos/kismet-release.gpg.key | apt-key add -
+          ;;
+      esac
+      ;;
+
+    "Debian" | "Raspbian")
+      case $DISTRO_VERSION_NAME in
+        "buster" | "Buster")
+          wget -O - https://www.kismetwireless.net/repos/kismet-release.gpg.key | apt-key add -
+          echo 'deb https://www.kismetwireless.net/repos/apt/release/buster buster main' | tee /etc/apt/sources.list.d/kismet.list
+          apt update
+          ;;
+        *) #Don't even try to proceed for something that's not Debian Buster.
+          echo "This Debian/Raspbian version is not supported for bluemon. Aborting installation..."
+          exit 1
+          ;;
+      esac
+      ;;
+
+    "Kali GNU/Linux")
+      wget -O - https://www.kismetwireless.net/repos/kismet-release.gpg.key | apt-key add -
+      echo 'deb https://www.kismetwireless.net/repos/apt/release/kali kali main' | tee /etc/apt/sources.list.d/kismet.list
+      apt update
+      ;;
+
+    *) #Fail for distros that are not any of the previous.
+      echo "This OS is not supported for bluemon. Aborting installation..."
+      exit 1
+      ;;
+  esac
+fi
 # Check if Kismet and its dependencies are installed, install if not present
-dpkg -s $KISMET_APT_PKGS > /dev/null 2>&1
-if [ $? != 0 ]; then
+if dpkg -s $KISMET_APT_PKGS > /dev/null 2>&1; then
 	echo "Installing Kismet Packages..."
 	apt install -y $KISMET_APT_PKGS
 else
 	echo "Kismet Packages already installed, continuing..."
 fi
-dpkg -s $PROG_DEPENDENCIES > /dev/null 2>&1
-if [ $? != 0 ]; then
+
+if dpkg -s "$PROG_DEPENDENCIES" > /dev/null 2>&1; then
   echo "Installing Program Dependencies..."
-  apt install -y $PROG_DEPENDENCIES
+  apt install -y "$PROG_DEPENDENCIES"
 else
   echo "Dependencies already installed, continuing..."
 fi
 
 # Check if pip3 is installed, install if not present
-dpkg -s $PIP_APT_PKGNAME > /dev/null 2>&1
-if [ $? != 0 ]; then
+if dpkg -s $PIP_APT_PKGNAME > /dev/null 2>&1; then
 	echo "Installing PIP3..."
 	apt install -y $PIP_APT_PKGNAME
 else
@@ -56,8 +109,7 @@ deactivate
 
 # Check if user already exists, create if it does not
 
-getent passwd $PROG_USERNAME > /dev/null 2>&1
-if [ $? != 0 ]; then
+if getent passwd $PROG_USERNAME > /dev/null 2>&1; then
 	echo "Creating user $PROG_USERNAME..."
 	useradd -d $PROG_DATA_DIR -r $PROG_USERNAME
 	chsh -s /sbin/nologin $PROG_USERNAME
@@ -65,8 +117,7 @@ fi
 
 #Check if group already exists, create if it does not
 
-getent group $PROG_GROUPNAME > /dev/null 2>&1
-if [ $? != 0 ]; then
+if getent group $PROG_GROUPNAME > /dev/null 2>&1; then
 	echo "Creating group $PROG_GROUPNAME..."
 	groupadd $PROG_GROUPNAME
 fi
@@ -108,8 +159,7 @@ if [[ "$GROUP_MEMS" != *"$PROG_USERNAME"* ]]; then
 fi
 
 #Check if Kismet data directory exists, create it if not
-ls $PROG_DATA_DIR > /dev/null 2>&1
-if [ $? != 0 ]; then
+if ls $PROG_DATA_DIR > /dev/null 2>&1; then
 	echo "Creating kismet data directory"
 	mkdir -p $PROG_DATA_DIR
 	chown -R $PROG_USERNAME:$PROG_GROUPNAME $PROG_DATA_DIR
@@ -125,8 +175,7 @@ cp bluemon.conf.systemd-tmpfiles /lib/tmpfiles.d/bluemon.conf
 systemd-tmpfiles --create --remove --boot
 
 #Check if directory where bluemon executables stored exists, create if not
-ls $PROG_EXEC_DIR > /dev/null 2>&1
-if [ $? != 0 ]; then
+if ls $PROG_EXEC_DIR > /dev/null 2>&1; then
   echo "Creating directory $PROG_EXEC_DIR..."
   mkdir -p $PROG_EXEC_DIR
   chown -R $PROG_USERNAME:$PROG_GROUPNAME $PROG_EXEC_DIR
@@ -201,3 +250,8 @@ echo "Installation Complete!"
 echo "The BT surveillance program has been installed."
 echo "Please complete the post-install configuration to finish deployment."
 echo "You will need to modify the config files in /etc/bluemon before starting the service."
+echo "You can access kismet by going to http://localhost:2501 in your browser."
+echo "Your kismet login is:"
+echo "Username: admin"
+echo "Password: $KISMET_ADMIN_PASSWORD"
+echo "You may need to adjust your firewall to access kismet from other devices."
