@@ -1,5 +1,5 @@
-#This file is used to define the detection zones for the surveillance platform.
-#Each zone can have its own settings defined.
+#This file is used to define the detection zones for bluemon. Each zone can
+#have its own settings defined.
 
 #Defaults for all zones can also be set, in the event that a specific setting
 #is not set for a given zone.
