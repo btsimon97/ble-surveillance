@@ -35,7 +35,7 @@ def device_status_k(device_name):
     return device_known, device_nickname
 
 
-# determine whether the message requires notificaiton
+# determine whether the message requires notification
 def message_eligibility(dev_type, zone, device_known, nickname, macaddr, ubertoothName):
     eligibility = False
     monitor_unknown = not device_known & (zones.get(zone, 'alert_on_unrecognized') == 'true')
@@ -75,7 +75,6 @@ def send_message(zone, msg):
 def process_message(message):
     message_json = json.loads(message)
     zone = 'DEFAULT'
-    notify = False
     message_json = message['NEW_DEVICE']
     device_mac = message_json['kismet.device.base.macaddr']
     detected_by_uuid = message_json['kismet.device.base.seenby'][0]['kismet.common.seenby.uuid']
@@ -88,7 +87,7 @@ def process_message(message):
     # Determine the notification settings for that zone
     dev_type = message_json['kismet.device.base.type']
     sendMsg, msg = message_eligibility(dev_type, zone, device_known, nickname, device_mac, "")
-    if(sendMsg):
+    if sendMsg:
         send_message(zone, msg)
 
 

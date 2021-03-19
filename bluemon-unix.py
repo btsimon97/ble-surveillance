@@ -4,9 +4,6 @@ import os
 import asyncio
 import socket
 import json
-import websockets
-import pathlib
-import ssl
 import configparser
 
 # Begin Script Constants Definition
@@ -36,7 +33,7 @@ LISTEN_FDS = int(os.environ.get("LISTEN_FDS", 0))
 LISTEN_PID = os.environ.get("LISTEN_PID", None) or os.getpid()
 
 
-# gets device status(known or unknown) if message recieved from ubertooth
+# gets device status(known or unknown) if message received from ubertooth
 def device_status_u(device_name, ignore_uap):
     device_known = False
     device_nickname = "Unknown Device"
@@ -52,7 +49,7 @@ def device_status_u(device_name, ignore_uap):
     return device_known, device_nickname
 
 
-# determine whether the message requires notificaiton
+# determine whether the message requires notification
 def message_eligibility(dev_type, zone, device_known, nickname, macaddr, ubertoothName):
     eligibility = False
     monitor_unknown = not device_known & (zones.get(zone, 'alert_on_unrecognized') == 'true')
@@ -92,11 +89,8 @@ def send_message(zone, msg):
 # Process Received Message
 def process_message(message):
     message_json = json.loads(message)
-#    configParser = configparser.RawConfigParser()
-#    configFilePath = r'zones.conf.example'
-#    configParser.read(configFilePath)
     zone = 'DEFAULT'
-    notify = False
+#    notify = False
     detected_by_uuid = message_json['ubertooth_serial_number']
     dev_type = 'BT'
     # Determine which zone has detected the device from the configured zones
@@ -109,11 +103,11 @@ def process_message(message):
         device_mac = message_json['scan_results'][i]['mac']
         try:
             ubertooth_name = message_json['scan_results'][i]['name'] + ": "
-        except:
+        except:  # TODO: narrow this exception clause to catch specific one where we can't obtain ubertooth_name value
             ubertooth_name = ""
         device_known, nickname = device_status_u(device_mac, zones.get(zone, 'ignore_devices_with_unknown_uap'))
         sendMsg, msg = message_eligibility(dev_type, zone, device_known, nickname, device_mac, ubertooth_name)
-        if(sendMsg):
+        if sendMsg:
             send_message(zone, msg)
 
 
@@ -130,8 +124,8 @@ async def handle_connection(reader, writer):
 
 # Socket loop, handles incoming UNIX socket connections (TODO: Implement signal handling so socket is properly cleaned up)
 async def unix_socket():
-    server = None # initialize server variable so its always defined.
-    fd_socket = None # initialize fd_socket variable so its always defined.
+    server = None  # initialize server variable so its always defined.
+    fd_socket = None  # initialize fd_socket variable so its always defined.
     # Detect if we're running through systemd or not
     if LISTEN_FDS == 0:  # Not running via systemd or systemd didn't pass the FDs we need
         # Detect if socket file already exists and clean it up if it does
