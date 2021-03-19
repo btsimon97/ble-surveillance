@@ -15,32 +15,37 @@ import configparser
 config = configparser.ConfigParser()
 config.read('/etc/bluemon/bluemon.conf')  # TODO: Implement argparse so filename is set by CLI arg instead of hardcoded
 
+# Read in the zones config file
+zones = configparser.ConfigParser(interpolation=None)
+zones.read('/etc/bluemon/zones.conf')
+
+# Read in the devices list
+devices = configparser.ConfigParser(interpolation=None)
+devices.read('/etc/bluemon/devices.conf')
+
 
 # device status(known or unknown) if messsage recieved from kismet
 def device_status_k(device_name):
-    configParser = configparser.RawConfigParser()
-    configFilePath = r'devices.conf.example'
-    configParser.read(configFilePath)
     device_known = False
     device_nickname = "Unknown Device"
-    for section in configParser.sections():
-        if configParser.get(section, 'device_macaddr') == device_name:
+    for section in devices.sections():
+        if devices.get(section, 'device_macaddr') == device_name:
             device_known = True
-            device_nickname = configParser.get(section,'device_nickname')
+            device_nickname = devices.get(section, 'device_nickname')
     return device_known, device_nickname
 
 
 # determine whether the message requires notificaiton
-def message_eligibility(dev_type, configParser, zone, device_known, nickname, macaddr, ubertoothName):
+def message_eligibility(dev_type, zone, device_known, nickname, macaddr, ubertoothName):
     eligibility = False
-    monitor_unknown = not device_known & (configParser.get(zone, 'alert_on_unrecognized') == 'true')
-    monitor_known = device_known & (configParser.get(zone, 'alert_on_recognized') == 'true')
+    monitor_unknown = not device_known & (zones.get(zone, 'alert_on_unrecognized') == 'true')
+    monitor_known = device_known & (zones.get(zone, 'alert_on_recognized') == 'true')
     monitor = False
     if dev_type == 'BTLE' or dev_type == 'BTLE Device':
-        if configParser.get(zone, 'monitor_btle_devices') == 'true':
+        if zones.get(zone, 'monitor_btle_devices') == 'true':
             monitor = True
     else:
-        if configParser.get(zone, 'monitor_bt_devices') == 'true':
+        if zones.get(zone, 'monitor_bt_devices') == 'true':
             monitor = True
     if (monitor_known | monitor_unknown) & monitor:
         msg = nickname + " (" + ubertoothName + macaddr + ") " + " detected"
@@ -52,8 +57,8 @@ def message_eligibility(dev_type, configParser, zone, device_known, nickname, ma
 
 
 # sends the appropriate message based on zone settings
-def send_message(configParser, zone, msg):
-    notification_channels = configParser.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
+def send_message(zone, msg):
+    notification_channels = zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
     for channel in notification_channels:
         if channel == "email":
             print("Sent Email, " + msg)  # placeholders  until we set up messaging service
@@ -69,9 +74,6 @@ def send_message(configParser, zone, msg):
 # Process Received Message
 def process_message(message):
     message_json = json.loads(message)
-    configParser = configparser.RawConfigParser()
-    configFilePath = r'zones.conf.example'
-    configParser.read(configFilePath)
     zone = 'DEFAULT'
     notify = False
     message_json = message['NEW_DEVICE']
@@ -79,15 +81,15 @@ def process_message(message):
     detected_by_uuid = message_json['kismet.device.base.seenby'][0]['kismet.common.seenby.uuid']
     device_known, nickname = device_status_k(device_mac)
     # Determine which zone has detected the device from the configured zones
-    for section in configParser.sections():
+    for section in zones.sections():
         if section != 'DEFAULT':
-            if detected_by_uuid == configParser.get(section,'zone_uuid'):
+            if detected_by_uuid == zones.get(section, 'zone_uuid'):
                 zone = section
     # Determine the notification settings for that zone
     dev_type = message_json['kismet.device.base.type']
-    sendMsg, msg = message_eligibility(dev_type, configParser, zone, device_known, nickname, device_mac, "")
+    sendMsg, msg = message_eligibility(dev_type, zone, device_known, nickname, device_mac, "")
     if(sendMsg):
-        send_message(configParser,zone, msg)
+        send_message(zone, msg)
 
 
 async def kismet_websocket(configuration):

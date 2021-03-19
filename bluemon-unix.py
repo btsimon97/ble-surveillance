@@ -23,6 +23,14 @@ message_max_size = 1024  # Max size of single message in bytes. Anything longer 
 config = configparser.ConfigParser()
 config.read('/etc/bluemon/bluemon.conf')  # TODO: Implement argparse so filename is set by CLI arg instead of hardcoded
 
+# Read in the zones config file
+zones = configparser.ConfigParser(interpolation=None)
+zones.read('/etc/bluemon/zones.conf')
+
+# Read in the devices list
+devices = configparser.ConfigParser(interpolation=None)
+devices.read('/etc/bluemon/devices.conf')
+
 # Get environment variables from systemd that we use to connect to the socket.
 LISTEN_FDS = int(os.environ.get("LISTEN_FDS", 0))
 LISTEN_PID = os.environ.get("LISTEN_PID", None) or os.getpid()
@@ -30,34 +38,31 @@ LISTEN_PID = os.environ.get("LISTEN_PID", None) or os.getpid()
 
 # gets device status(known or unknown) if message recieved from ubertooth
 def device_status_u(device_name, ignore_uap):
-    configParser = configparser.RawConfigParser()
-    configFilePath = r'devices.conf.example'
-    configParser.read(configFilePath)
     device_known = False
     device_nickname = "Unknown Device"
     # checks all sections(devices) in configparser to see if macaddr detected is equal
-    for section in configParser.sections():
-        macaddr = configParser.get(section, 'device_macaddr')
+    for section in devices.sections():
+        macaddr = devices.get(section, 'device_macaddr')
         if macaddr[9:] == device_name[9:]:  # last 3 parts of macaddr should always be available, check if match
             if macaddr[6:] == device_name[6:]:  # if last 4 parts are readable and = to device, known
                 device_known = True
-                device_nickname = configParser.get(section,'device_nickname')
+                device_nickname = devices.get(section, 'device_nickname')
             elif (macaddr[6:8] == '??') & (ignore_uap == "false"):  # if second part is ?? and we choose not to ignore uap, known
                 device_known = True
     return device_known, device_nickname
 
 
 # determine whether the message requires notificaiton
-def message_eligibility(dev_type, configParser, zone, device_known, nickname, macaddr, ubertoothName):
+def message_eligibility(dev_type, zone, device_known, nickname, macaddr, ubertoothName):
     eligibility = False
-    monitor_unknown = not device_known & (configParser.get(zone, 'alert_on_unrecognized') == 'true')
-    monitor_known = device_known & (configParser.get(zone, 'alert_on_recognized') == 'true')
+    monitor_unknown = not device_known & (zones.get(zone, 'alert_on_unrecognized') == 'true')
+    monitor_known = device_known & (zones.get(zone, 'alert_on_recognized') == 'true')
     monitor = False
     if dev_type == 'BTLE':
-        if configParser.get(zone, 'monitor_btle_devices') == 'true':
+        if zones.get(zone, 'monitor_btle_devices') == 'true':
             monitor = True
     else:
-        if configParser.get(zone, 'monitor_bt_devices') == 'true':
+        if zones.get(zone, 'monitor_bt_devices') == 'true':
             monitor = True
 
     if (monitor_known | monitor_unknown) & monitor:
@@ -70,8 +75,8 @@ def message_eligibility(dev_type, configParser, zone, device_known, nickname, ma
 
 
 # sends the appropriate message based on zone settings
-def send_message(configParser, zone, msg):
-    notification_channels = configParser.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
+def send_message(zone, msg):
+    notification_channels = zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
     for channel in notification_channels:
         if channel == "email":
             print("Sent Email, " + msg)  # placeholders  until we set up messaging service
@@ -87,29 +92,29 @@ def send_message(configParser, zone, msg):
 # Process Received Message
 def process_message(message):
     message_json = json.loads(message)
-    configParser = configparser.RawConfigParser()
-    configFilePath = r'zones.conf.example'
-    configParser.read(configFilePath)
+#    configParser = configparser.RawConfigParser()
+#    configFilePath = r'zones.conf.example'
+#    configParser.read(configFilePath)
     zone = 'DEFAULT'
     notify = False
     detected_by_uuid = message_json['ubertooth_serial_number']
     dev_type = 'BT'
     # Determine which zone has detected the device from the configured zones
-    for section in configParser.sections():
+    for section in zones.sections():
         if section != 'DEFAULT':
-            if detected_by_uuid == configParser.get(section,'zone_uuid'):
+            if detected_by_uuid == zones.get(section, 'zone_uuid'):
                 zone = section
 
     for i in range(0, len(message_json['scan_results'])):
         device_mac = message_json['scan_results'][i]['mac']
         try:
-            ubertooth_name =message_json['scan_results'][i]['name'] + ": "
+            ubertooth_name = message_json['scan_results'][i]['name'] + ": "
         except:
-            ubertooth_name=""
-        device_known, nickname = device_status_u(device_mac, configParser.get(zone, 'ignore_devices_with_unknown_uap'))
-        sendMsg, msg = message_eligibility(dev_type, configParser, zone, device_known, nickname, device_mac, ubertooth_name)
+            ubertooth_name = ""
+        device_known, nickname = device_status_u(device_mac, zones.get(zone, 'ignore_devices_with_unknown_uap'))
+        sendMsg, msg = message_eligibility(dev_type, zone, device_known, nickname, device_mac, ubertooth_name)
         if(sendMsg):
-            send_message(configParser, zone, msg)
+            send_message(zone, msg)
 
 
 # Handle incoming connections and process received messages.
