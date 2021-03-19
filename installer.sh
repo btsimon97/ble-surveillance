@@ -17,7 +17,7 @@ PROG_DEPENDENCIES="curl wget python3-venv python3-wheel python3-setuptools"
 cd "${0%/*}" || exit
 
 # Check to make sure being run with root/sudo perms
-if [ whoami != root ]; then
+if [ $(whoami) != root ]; then
 	echo "This script must be run as root or with sudo for it to work."
 	echo "Please re-run this script as root or with sudo"
 	exit
