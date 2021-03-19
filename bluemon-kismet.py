@@ -16,9 +16,84 @@ config = configparser.ConfigParser()
 config.read('/etc/bluemon/bluemon.conf')  # TODO: Implement argparse so filename is set by CLI arg instead of hardcoded
 
 
+# device status(known or unknown) if messsage recieved from kismet
+def device_status_k(device_name):
+    configParser = configparser.RawConfigParser()
+    configFilePath = r'devices.conf.example'
+    configParser.read(configFilePath)
+    device_known = False
+    device_nickname = "Unknown Device"
+    for section in configParser.sections():
+        if configParser.get(section, 'device_macaddr') == device_name:
+            device_known = True
+            device_nickname = configParser.get(section,'device_nickname')
+    return device_known, device_nickname
+
+
+# determine whether the message requires notificaiton
+def message_eligibility(dev_type, configParser, zone, device_known, nickname, macaddr, ubertoothName):
+    eligibility = False
+    monitor_unknown = not device_known & (configParser.get(zone, 'alert_on_unrecognized') == 'true')
+    monitor_known = device_known & (configParser.get(zone, 'alert_on_recognized') == 'true')
+    monitor = False
+    if dev_type == 'BTLE' or dev_type == 'BTLE Device':
+        if configParser.get(zone, 'monitor_btle_devices') == 'true':
+            monitor = True
+    else:
+        if configParser.get(zone, 'monitor_bt_devices') == 'true':
+            monitor = True
+    if (monitor_known | monitor_unknown) & monitor:
+        msg = nickname + " (" + ubertoothName + macaddr + ") " + " detected"
+        eligibility = True
+    else:
+        msg = "Ignoring Device event due to zone config settings."
+        eligibility = False
+
+    return eligibility, msg
+
+
+# sends the appropriate message based on zone settings
+def send_message(configParser, zone, msg):
+    notification_channels = configParser.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
+    for channel in notification_channels:
+        if channel == "email":
+            print("Sent Email, " + msg)  # placeholders  until we set up messaging service
+        elif channel == "sms":
+            print("Sent SMS,  " + msg)
+        elif channel == "signal":
+            print("Sent SMS,  " + msg)
+            # Format message into notification server JSON
+            # Connect to notification server socket
+            # Send notification message.
+
+
+# Process Received Message
+def process_message(message):
+    message_json = json.loads(message)
+    configParser = configparser.RawConfigParser()
+    configFilePath = r'zones.conf.example'
+    configParser.read(configFilePath)
+    zone = 'DEFAULT'
+    notify = False
+    message_json = message['NEW_DEVICE']
+    device_mac = message_json['kismet.device.base.macaddr']
+    detected_by_uuid = message_json['kismet.device.base.seenby'][0]['kismet.common.seenby.uuid']
+    device_known, nickname = device_status_k(device_mac)
+    # Determine which zone has detected the device from the configured zones
+    for section in configParser.sections():
+        if section != 'DEFAULT':
+            if detected_by_uuid == configParser.get(section,'zone_uuid'):
+                zone = section
+    # Determine the notification settings for that zone
+    dev_type = message_json['kismet.device.base.type']
+    sendMsg, msg = message_eligibility(dev_type, configParser, zone, device_known, nickname, device_mac, "")
+    if(sendMsg):
+        send_message(configParser,zone, msg)
+
+
 async def kismet_websocket(configuration):
     uri = ""
-    ssl_context = None # Used for TLS websocket sessions, initialized here so it can be setup later.
+    ssl_context = None  # Used for TLS websocket sessions, initialized here so it can be setup later.
 
     # message sent to kismet to get device data, along with some field simplification to reduce the data we get back.
     # split across multiple lines for better visibility.
@@ -42,7 +117,8 @@ async def kismet_websocket(configuration):
                     while True:
                         try:
                             kismet_message = await websocket.recv()
-                            print(kismet_message, flush=True)  # replace this with a function call to the processing function.
+                            process_message(kismet_message)
+                            print(kismet_message, flush=True)  # Remove this when we get a production ready version
                         except websockets.exceptions.ConnectionClosed:
                             print("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")
                             break
@@ -65,7 +141,8 @@ async def kismet_websocket(configuration):
                     while True:
                         try:
                             kismet_message = await websocket.recv()
-                            print(kismet_message, flush=True)  # replace this with function call to processing function.
+                            process_message(kismet_message)
+                            print(kismet_message, flush=True)  # Remove this when we get a production ready version.
                         except websockets.exceptions.ConnectionClosed:
                             print("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")
                             break
