@@ -38,38 +38,6 @@ devices.read(args.device_file)
 
 
 # device status(known or unknown) if messsage recieved from kismet
-async def device_status_k(device_name):
-    device_known = False
-    device_nickname = "Unknown Device"
-    for section in devices.sections():
-        if devices.get(section, 'device_macaddr') == device_name:
-            device_known = True
-            device_nickname = devices.get(section, 'device_nickname')
-    return device_known, device_nickname
-
-
-# determine whether the message requires notification
-async def message_eligibility(dev_type, zone, device_known, nickname, macaddr, ubertoothName):
-    eligibility = False
-    monitor_unknown = not device_known & (zones.get(zone, 'alert_on_unrecognized') == 'true')
-    monitor_known = device_known & (zones.get(zone, 'alert_on_recognized') == 'true')
-    monitor = False
-    if dev_type == 'BTLE' or dev_type == 'BTLE Device':
-        if zones.get(zone, 'monitor_btle_devices') == 'true':
-            monitor = True
-    else:
-        if zones.get(zone, 'monitor_bt_devices') == 'true':
-            monitor = True
-    if (monitor_known | monitor_unknown) & monitor:
-        msg = nickname + " (" + ubertoothName + macaddr + ") " + " detected"
-        eligibility = True
-    else:
-        msg = "Ignoring Device event due to zone config settings."
-
-    return eligibility, msg
-
-
-# sends the appropriate message based on zone settings
 async def send_message(zone, msg):
     notification_channels = zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
     for channel in notification_channels:
@@ -91,17 +59,45 @@ async def process_message(message):
     message_json = message['NEW_DEVICE']
     device_mac = message_json['kismet.device.base.macaddr']
     detected_by_uuid = message_json['kismet.device.base.seenby'][0]['kismet.common.seenby.uuid']
-    device_known, nickname = await device_status_k(device_mac)
+    device_name = message_json['kismet.device.base.commonname']
+    
+    # Determine if device is known or not
+    device_known = False
+    device_nickname = "Unknown Device"
+    for section in devices.sections():
+        if devices.get(section, 'device_macaddr') == device_name:
+            device_known = True
+            device_nickname = devices.get(section, 'device_nickname')
+    
     # Determine which zone has detected the device from the configured zones
     for section in zones.sections():
         if section != 'DEFAULT':
             if detected_by_uuid == zones.get(section, 'zone_uuid'):
                 zone = section
-    # Determine the notification settings for that zone
-    dev_type = message_json['kismet.device.base.type']
-    sendMsg, msg = await message_eligibility(dev_type, zone, device_known, nickname, device_mac, "")
-    if sendMsg:
-        await send_message(zone, msg)
+                
+    # Determine if notification settings for zone require notification and fire one if they do.
+    alert_message = "Detected " + device_nickname + " with MAC: " + device_mac
+    if (message_json['kismet.device.base.type'] == "BTLE" or message_json['kismet.device.base.type'] == "BTLE Device") and zones.getboolean(zone, 'monitor_btle_devices'):
+        if zones.getboolean(zone, 'alert_on_unrecognized') and not device_known:
+            # Fire Notification
+            print(alert_message, flush=True)
+            
+        elif zones.getboolean(zone, 'alert_on_recognized'):
+            print(alert_message, flush=True)
+            # Fire Notification
+            
+    elif zones.getboolean(zone, 'monitor_bt_devices'):
+        if zones.getboolean(zone, 'alert_on_unrecognized') and not device_known:
+            # Fire Notification
+            print(alert_message, flush=True)
+            
+        elif zones.getboolean(zone, 'alert_on_recognized'):
+            # Fire Notification
+            print(alert_message, flush=True)
+ 
+    else:
+        # Don't fire notification, but print something saying we got something to ignore.
+        print("Ignoring Device event due to notification settings.", flush=True) 
 
 
 async def kismet_websocket(configuration):
