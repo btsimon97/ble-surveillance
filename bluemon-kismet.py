@@ -38,7 +38,7 @@ devices.read(args.device_file)
 
 
 # device status(known or unknown) if messsage recieved from kismet
-def device_status_k(device_name):
+async def device_status_k(device_name):
     device_known = False
     device_nickname = "Unknown Device"
     for section in devices.sections():
@@ -49,7 +49,7 @@ def device_status_k(device_name):
 
 
 # determine whether the message requires notification
-def message_eligibility(dev_type, zone, device_known, nickname, macaddr, ubertoothName):
+async def message_eligibility(dev_type, zone, device_known, nickname, macaddr, ubertoothName):
     eligibility = False
     monitor_unknown = not device_known & (zones.get(zone, 'alert_on_unrecognized') == 'true')
     monitor_known = device_known & (zones.get(zone, 'alert_on_recognized') == 'true')
@@ -70,7 +70,7 @@ def message_eligibility(dev_type, zone, device_known, nickname, macaddr, ubertoo
 
 
 # sends the appropriate message based on zone settings
-def send_message(zone, msg):
+async def send_message(zone, msg):
     notification_channels = zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
     for channel in notification_channels:
         if channel == "email":
@@ -85,13 +85,13 @@ def send_message(zone, msg):
 
 
 # Process Received Message
-def process_message(message):
+async def process_message(message):
     message_json = json.loads(message)
     zone = 'DEFAULT'
     message_json = message['NEW_DEVICE']
     device_mac = message_json['kismet.device.base.macaddr']
     detected_by_uuid = message_json['kismet.device.base.seenby'][0]['kismet.common.seenby.uuid']
-    device_known, nickname = device_status_k(device_mac)
+    device_known, nickname = await device_status_k(device_mac)
     # Determine which zone has detected the device from the configured zones
     for section in zones.sections():
         if section != 'DEFAULT':
@@ -99,9 +99,9 @@ def process_message(message):
                 zone = section
     # Determine the notification settings for that zone
     dev_type = message_json['kismet.device.base.type']
-    sendMsg, msg = message_eligibility(dev_type, zone, device_known, nickname, device_mac, "")
+    sendMsg, msg = await message_eligibility(dev_type, zone, device_known, nickname, device_mac, "")
     if sendMsg:
-        send_message(zone, msg)
+        await send_message(zone, msg)
 
 
 async def kismet_websocket(configuration):
@@ -130,7 +130,7 @@ async def kismet_websocket(configuration):
                     while True:
                         try:
                             kismet_message = await websocket.recv()
-                            process_message(kismet_message)
+                            await process_message(kismet_message)
                             print(kismet_message, flush=True)  # Remove this when we get a production ready version
                         except websockets.exceptions.ConnectionClosed:
                             print("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")
@@ -154,7 +154,7 @@ async def kismet_websocket(configuration):
                     while True:
                         try:
                             kismet_message = await websocket.recv()
-                            process_message(kismet_message)
+                            await process_message(kismet_message)
                             print(kismet_message, flush=True)  # Remove this when we get a production ready version.
                         except websockets.exceptions.ConnectionClosed:
                             print("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")

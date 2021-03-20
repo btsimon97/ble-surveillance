@@ -34,7 +34,7 @@ LISTEN_PID = os.environ.get("LISTEN_PID", None) or os.getpid()
 
 
 # gets device status(known or unknown) if message received from ubertooth
-def device_status_u(device_name, ignore_uap):
+async def device_status_u(device_name, ignore_uap):
     device_known = False
     device_nickname = "Unknown Device"
     # checks all sections(devices) in configparser to see if macaddr detected is equal
@@ -50,7 +50,7 @@ def device_status_u(device_name, ignore_uap):
 
 
 # determine whether the message requires notification
-def message_eligibility(dev_type, zone, device_known, nickname, macaddr, ubertoothName):
+async def message_eligibility(dev_type, zone, device_known, nickname, macaddr, ubertoothName):
     eligibility = False
     monitor_unknown = not device_known & (zones.get(zone, 'alert_on_unrecognized') == 'true')
     monitor_known = device_known & (zones.get(zone, 'alert_on_recognized') == 'true')
@@ -72,7 +72,7 @@ def message_eligibility(dev_type, zone, device_known, nickname, macaddr, ubertoo
 
 
 # sends the appropriate message based on zone settings
-def send_message(zone, msg):
+async def send_message(zone, msg):
     notification_channels = zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
     for channel in notification_channels:
         if channel == "email":
@@ -87,7 +87,7 @@ def send_message(zone, msg):
 
 
 # Process Received Message
-def process_message(message):
+async def process_message(message):
     message_json = json.loads(message)
     zone = 'DEFAULT'
 #    notify = False
@@ -105,10 +105,10 @@ def process_message(message):
             ubertooth_name = message_json['scan_results'][i]['name'] + ": "
         except:  # TODO: narrow this exception clause to catch specific one where we can't obtain ubertooth_name value
             ubertooth_name = ""
-        device_known, nickname = device_status_u(device_mac, zones.get(zone, 'ignore_devices_with_unknown_uap'))
-        sendMsg, msg = message_eligibility(dev_type, zone, device_known, nickname, device_mac, ubertooth_name)
+        device_known, nickname = await device_status_u(device_mac, zones.get(zone, 'ignore_devices_with_unknown_uap'))
+        sendMsg, msg = await message_eligibility(dev_type, zone, device_known, nickname, device_mac, ubertooth_name)
         if sendMsg:
-            send_message(zone, msg)
+            await send_message(zone, msg)
 
 
 # Handle incoming connections and process received messages.
@@ -118,6 +118,7 @@ async def handle_connection(reader, writer):
         if not message:  # Quit the loop when we stop getting data
             break
         message = message.decode()
+        await process_message(message)
         print(message, flush=True)  # Replace this with a function call to dispatch messages to the notification server.
     writer.close()
 
