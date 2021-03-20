@@ -53,14 +53,11 @@ async def send_message(zone, msg):
 
 
 # Process Received Message
-async def process_message(message):
-    message_json = json.loads(message)
+async def process_message(message_json):
     zone = 'DEFAULT'
-    message_json = message['NEW_DEVICE']
-    device_mac = message_json['kismet.device.base.macaddr']
-    detected_by_uuid = message_json['kismet.device.base.seenby'][0]['kismet.common.seenby.uuid']
-    device_name = message_json['kismet.device.base.commonname']
-    
+    device_mac = message_json['NEW_DEVICE']['kismet.device.base.macaddr']
+    detected_by_uuid = message_json['NEW_DEVICE']['kismet.device.base.seenby'][0]['kismet.common.seenby.uuid']
+    device_name = message_json['NEW_DEVICE']['kismet.device.base.commonname']
     # Determine if device is known or not
     device_known = False
     device_nickname = "Unknown Device"
@@ -68,33 +65,31 @@ async def process_message(message):
         if devices.get(section, 'device_macaddr') == device_name:
             device_known = True
             device_nickname = devices.get(section, 'device_nickname')
-    
     # Determine which zone has detected the device from the configured zones
     for section in zones.sections():
         if section != 'DEFAULT':
             if detected_by_uuid == zones.get(section, 'zone_uuid'):
                 zone = section
-                
     # Determine if notification settings for zone require notification and fire one if they do.
     alert_message = "Detected " + device_nickname + " with MAC: " + device_mac
-    if (message_json['kismet.device.base.type'] == "BTLE" or message_json['kismet.device.base.type'] == "BTLE Device") and zones.getboolean(zone, 'monitor_btle_devices'):
+    if (message_json['NEW_DEVICE']['kismet.device.base.type'] == "BTLE" or message_json['NEW_DEVICE']['kismet.device.base.type'] == "BTLE Device") and zones.getboolean(zone, 'monitor_btle_devices'):
         if zones.getboolean(zone, 'alert_on_unrecognized') and not device_known:
             # Fire Notification
             print(alert_message, flush=True)
-            
+
         elif zones.getboolean(zone, 'alert_on_recognized'):
             print(alert_message, flush=True)
             # Fire Notification
-            
+
     elif zones.getboolean(zone, 'monitor_bt_devices'):
         if zones.getboolean(zone, 'alert_on_unrecognized') and not device_known:
             # Fire Notification
             print(alert_message, flush=True)
-            
+
         elif zones.getboolean(zone, 'alert_on_recognized'):
             # Fire Notification
             print(alert_message, flush=True)
- 
+
     else:
         # Don't fire notification, but print something saying we got something to ignore.
         print("Ignoring Device event due to notification settings.", flush=True) 
@@ -126,7 +121,7 @@ async def kismet_websocket(configuration):
                     while True:
                         try:
                             kismet_message = await websocket.recv()
-                            await process_message(kismet_message)
+                            await process_message(json.loads(kismet_message))
                             print(kismet_message, flush=True)  # Remove this when we get a production ready version
                         except websockets.exceptions.ConnectionClosed:
                             print("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")
@@ -150,7 +145,7 @@ async def kismet_websocket(configuration):
                     while True:
                         try:
                             kismet_message = await websocket.recv()
-                            await process_message(kismet_message)
+                            await process_message(json.loads(kismet_message))
                             print(kismet_message, flush=True)  # Remove this when we get a production ready version.
                         except websockets.exceptions.ConnectionClosed:
                             print("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")
