@@ -7,21 +7,34 @@ import websockets
 import pathlib
 import ssl
 import configparser
+import argparse
 
+# Instantiate the arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--config-file", type=str,
+                    help="Specify the bluemon config file to use. Default is /etc/bluemon/bluemon.conf",
+                    default="/etc/bluemon/bluemon.conf")
+parser.add_argument("-d", "--device-file", type=str,
+                    help="Specify the file with the list of known devices to use. Default is /etc/bluemon/devices.conf",
+                    default="/etc/bluemon/devices.conf")
+parser.add_argument("-z", "--zone-file", type=str,
+                    help="Specify the file with the list of zones to use. Default is /etc/bluemon/zones.conf",
+                    default="/etc/bluemon/zones.conf")
+args = parser.parse_args()
 
 # Begin Script Functions Definition
 
 # Read in the config file (this has to be at the top so other functions can read it).
 config = configparser.ConfigParser()
-config.read('/etc/bluemon/bluemon.conf')  # TODO: Implement argparse so filename is set by CLI arg instead of hardcoded
+config.read(args.config_file)
 
 # Read in the zones config file
 zones = configparser.ConfigParser(interpolation=None)
-zones.read('/etc/bluemon/zones.conf')
+zones.read(args.zone_file)
 
 # Read in the devices list
 devices = configparser.ConfigParser(interpolation=None)
-devices.read('/etc/bluemon/devices.conf')
+devices.read(args.device_file)
 
 
 # device status(known or unknown) if messsage recieved from kismet
