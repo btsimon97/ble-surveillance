@@ -5,11 +5,25 @@ import asyncio
 import socket
 import json
 import configparser
+import argparse
 import re
+
+
+# Instantiate the arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--config-file", type=str,
+                    help="Specify the bluemon config file to use. Default is /etc/bluemon/bluemon.conf",
+                    default="/etc/bluemon/bluemon.conf")
+parser.add_argument("-d", "--device-file", type=str,
+                    help="Specify the file with the list of known devices to use. Default is /etc/bluemon/devices.conf",
+                    default="/etc/bluemon/devices.conf")
+parser.add_argument("-z", "--zone-file", type=str,
+                    help="Specify the file with the list of zones to use. Default is /etc/bluemon/zones.conf",
+                    default="/etc/bluemon/zones.conf")
+args = parser.parse_args()
 
 # Begin Script Constants Definition
 message_socket_path = '/run/bluemon/eventdata.socket'  # Path and name of the listening socket.
-message_socket = None  # Actual socket we'll be getting messages from. Initialized to None until socket is setup.
 message_socket_permissions = 0o660  # Socket Permissions, see note in setup function for more info.
 message_max_size = 1024  # Max size of single message in bytes. Anything longer is truncated. Must be power of 2
 # End Script Constants Definition
@@ -19,15 +33,15 @@ message_max_size = 1024  # Max size of single message in bytes. Anything longer 
 
 # Read in the config file (this has to be at the top so other functions can read it).
 config = configparser.ConfigParser()
-config.read('/etc/bluemon/bluemon.conf')  # TODO: Implement argparse so filename is set by CLI arg instead of hardcoded
+config.read(args.config_file)
 
 # Read in the zones config file
 zones = configparser.ConfigParser(interpolation=None)
-zones.read('/etc/bluemon/zones.conf')
+zones.read(args.zone_file)
 
 # Read in the devices list
 devices = configparser.ConfigParser(interpolation=None)
-devices.read('/etc/bluemon/devices.conf')
+devices.read(args.device_file)
 
 # Get environment variables from systemd that we use to connect to the socket.
 LISTEN_FDS = int(os.environ.get("LISTEN_FDS", 0))
