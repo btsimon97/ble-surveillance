@@ -38,7 +38,7 @@ devices.read(args.device_file)
 
 
 # device status(known or unknown) if messsage recieved from kismet
-async def send_message(zone, msg):
+async def send_alert(zone, msg):
     notification_channels = zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
     for channel in notification_channels:
         if channel == "email":
@@ -71,25 +71,33 @@ async def process_message(message_json):
             if detected_by_uuid == zones.get(section, 'zone_uuid'):
                 zone = section
     # Determine if notification settings for zone require notification and fire one if they do.
-    alert_message = "Detected " + device_nickname + " with MAC: " + device_mac
+    alert_message = None
     if (message_json['NEW_DEVICE']['kismet.device.base.type'] == "BTLE" or message_json['NEW_DEVICE']['kismet.device.base.type'] == "BTLE Device") and zones.getboolean(zone, 'monitor_btle_devices'):
         if zones.getboolean(zone, 'alert_on_unrecognized') and not device_known:
             # Fire Notification
-            print(alert_message, flush=True)
-
+            if device_name == device_mac:
+                alert_message = "Detected an unknown device with MAC: " + device_mac
+            else:
+                alert_message = "Detected an unknown device with Name: " + device_name + " and MAC: " + device_mac
         elif zones.getboolean(zone, 'alert_on_recognized'):
+            alert_message = "Detected known device " + device_nickname + " (" + device_mac + ")"
+
+        if alert_message:
             print(alert_message, flush=True)
-            # Fire Notification
+            await send_alert(zone, alert_message)
 
     elif zones.getboolean(zone, 'monitor_bt_devices'):
         if zones.getboolean(zone, 'alert_on_unrecognized') and not device_known:
-            # Fire Notification
-            print(alert_message, flush=True)
-
+            if device_name == device_mac:
+                alert_message = "Detected an unknown device with MAC: " + device_mac
+            else:
+                alert_message = "Detected an unknown device with Name: " + device_name + " and MAC: " + device_mac
         elif zones.getboolean(zone, 'alert_on_recognized'):
-            # Fire Notification
-            print(alert_message, flush=True)
+            alert_message = "Detected known device " + device_nickname + " (" + device_mac + ")"
 
+        if alert_message:
+            print(alert_message, flush=True)
+            await send_alert(zone, alert_message)
     else:
         # Don't fire notification, but print something saying we got something to ignore.
         print("Ignoring Device event due to notification settings.", flush=True) 
