@@ -108,7 +108,6 @@ async def process_message(message_json):
                         device_mac = current_mac
                         break
             
-            alert_message = ""
             if device_known:
                 alert_message = "Detected known device " + device_nickname + " (" + device_mac + ")"
             
@@ -140,8 +139,6 @@ async def handle_connection(reader, writer):
 
 # Socket loop, handles incoming UNIX socket connections (TODO: Implement signal handling so socket is properly cleaned up)
 async def unix_socket():
-    server = None  # initialize server variable so its always defined.
-    fd_socket = None  # initialize fd_socket variable so its always defined.
     # Detect if we're running through systemd or not
     if LISTEN_FDS == 0:  # Not running via systemd or systemd didn't pass the FDs we need
         # Detect if socket file already exists and clean it up if it does
