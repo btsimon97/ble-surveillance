@@ -5,6 +5,7 @@ import asyncio
 import socket
 import json
 import configparser
+import re
 
 # Begin Script Constants Definition
 message_socket_path = '/run/bluemon/eventdata.socket'  # Path and name of the listening socket.
@@ -33,46 +34,8 @@ LISTEN_FDS = int(os.environ.get("LISTEN_FDS", 0))
 LISTEN_PID = os.environ.get("LISTEN_PID", None) or os.getpid()
 
 
-# gets device status(known or unknown) if message received from ubertooth
-async def device_status_u(device_name, ignore_uap):
-    device_known = False
-    device_nickname = "Unknown Device"
-    # checks all sections(devices) in configparser to see if macaddr detected is equal
-    for section in devices.sections():
-        macaddr = devices.get(section, 'device_macaddr')
-        if macaddr[9:] == device_name[9:]:  # last 3 parts of macaddr should always be available, check if match
-            if macaddr[6:] == device_name[6:]:  # if last 4 parts are readable and = to device, known
-                device_known = True
-                device_nickname = devices.get(section, 'device_nickname')
-            elif (macaddr[6:8] == '??') & (ignore_uap == "false"):  # if second part is ?? and we choose not to ignore uap, known
-                device_known = True
-    return device_known, device_nickname
-
-
-# determine whether the message requires notification
-async def message_eligibility(dev_type, zone, device_known, nickname, macaddr, ubertoothName):
-    eligibility = False
-    monitor_unknown = not device_known & (zones.get(zone, 'alert_on_unrecognized') == 'true')
-    monitor_known = device_known & (zones.get(zone, 'alert_on_recognized') == 'true')
-    monitor = False
-    if dev_type == 'BTLE':
-        if zones.get(zone, 'monitor_btle_devices') == 'true':
-            monitor = True
-    else:
-        if zones.get(zone, 'monitor_bt_devices') == 'true':
-            monitor = True
-
-    if (monitor_known | monitor_unknown) & monitor:
-        msg = nickname + " (" + ubertoothName + macaddr + ") " + " detected"
-        eligibility = True
-    else:
-        msg = "Ignoring Device event due to zone config settings."
-
-    return eligibility, msg
-
-
 # sends the appropriate message based on zone settings
-async def send_message(zone, msg):
+async def send_alert(zone, msg):
     notification_channels = zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
     for channel in notification_channels:
         if channel == "email":
@@ -87,28 +50,66 @@ async def send_message(zone, msg):
 
 
 # Process Received Message
-async def process_message(message):
-    message_json = json.loads(message)
+async def process_message(message_json):
     zone = 'DEFAULT'
-#    notify = False
     detected_by_uuid = message_json['ubertooth_serial_number']
-    dev_type = 'BT'
-    # Determine which zone has detected the device from the configured zones
     for section in zones.sections():
         if section != 'DEFAULT':
             if detected_by_uuid == zones.get(section, 'zone_uuid'):
                 zone = section
+    if zones.getboolean(zone, 'monitor_bt_devices'):
+        #  Compile a regex to identify results with an unknown UAP
+        unknown_uap_regex = re.compile('(\?{2}\:){3}(([a-f]|[A-F]|[0-9]){2}\:?){3}')
+        #  Compile regex to extract LAP of device from reported MAC
+        lap_regex = re.compile('(([a-f]|[A-F]|[0-9]){2}\:?){3}')
+        #  Compile regex to extract UAP and LAP of device from reported MAC
+        uap_and_lap_regex = re.compile('(([a-f]|[A-F]|[0-9]){2}\:?){4}')
+        for device in message_json['scan_results']:
+            device_known = False
+            device_nickname = ""
+            device_advertised_name = ""  # what the device advertises its name as in discovery packets, not always known
+            device_mac = device['mac']
+            if 'name' in device:
+                device_advertised_name = device['name']
+                
+            #  if device's UAP isn't known and the zone isn't configured to ignore unknown UAP devices
+            if unknown_uap_regex.match(device['mac']) and not zones.getboolean(zone, 'ignore_devices_with_unknown_uap'):
+                lap = lap_regex.search(device['mac'])[0]  # extract LAP from device mac string
+                for section in devices.sections():  # see if the device's LAP matches a known LAP
+                    current_mac = devices.get(section, 'device_macaddr')
+                    if lap in current_mac:
+                        device_known = True
+                        device_nickname = devices.get(section, 'device_nickname')
+                        device_mac = current_mac
+                        break
 
-    for i in range(0, len(message_json['scan_results'])):
-        device_mac = message_json['scan_results'][i]['mac']
-        try:
-            ubertooth_name = message_json['scan_results'][i]['name'] + ": "
-        except:  # TODO: narrow this exception clause to catch specific one where we can't obtain ubertooth_name value
-            ubertooth_name = ""
-        device_known, nickname = await device_status_u(device_mac, zones.get(zone, 'ignore_devices_with_unknown_uap'))
-        sendMsg, msg = await message_eligibility(dev_type, zone, device_known, nickname, device_mac, ubertooth_name)
-        if sendMsg:
-            await send_message(zone, msg)
+            #  device's UAP is known
+            else:
+                uap_and_lap = uap_and_lap_regex.search(device['mac'])[0]
+                for section in devices.sections():  # see if UAP and LAP matches known UAP and LAP
+                    current_mac = devices.get(section, 'device_macaddr')
+                    if uap_and_lap in current_mac:
+                        device_known = True
+                        device_nickname = devices.get(section, 'device_nickname')
+                        device_mac = current_mac
+                        break
+            
+            alert_message = ""
+            if device_known:
+                alert_message = "Detected known device " + device_nickname + " (" + device_mac + ")"
+            
+            elif device_advertised_name and (device_advertised_name != device_mac):
+                alert_message = "Detected an unknown device with Name: " + device_advertised_name + " and MAC: " + device_mac
+                
+            else:
+                alert_message = "Detected an unknown device with MAC: " + device_mac
+                
+            print(alert_message, flush=True)
+            await send_alert(zone, alert_message)
+    
+    else:
+        # Ignore device event since zone doesn't care about BT devices
+        print("Ignoring device event due to zone settings.", flush=True)
 
 
 # Handle incoming connections and process received messages.
@@ -118,7 +119,7 @@ async def handle_connection(reader, writer):
         if not message:  # Quit the loop when we stop getting data
             break
         message = message.decode()
-        await process_message(message)
+        await process_message(json.loads(message))
         print(message, flush=True)  # Replace this with a function call to dispatch messages to the notification server.
     writer.close()
 
