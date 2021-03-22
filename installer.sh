@@ -48,6 +48,7 @@ if [ ! -f /etc/apt/sources.list.d/kismet.list ]; then
           echo "Detected an Ubuntu Release version which does not have a Kismet APT Repository."
           echo "Defaulting to the Kismet APT Repository for Kali, this may cause issues..."
           wget -O - https://www.kismetwireless.net/repos/kismet-release.gpg.key | apt-key add -
+	  echo 'deb https://www.kismetwireless.net/repos/apt/release/kali kali main' | tee /etc/apt/sources.list.d/kismet.list
           ;;
       esac
       ;;
