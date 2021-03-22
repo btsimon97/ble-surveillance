@@ -235,6 +235,7 @@ fi
 
 #Set kismet password for Bluemon
 cp /etc/bluemon/bluemon.conf.example /etc/bluemon/bluemon.conf
+cp /etc/bluemon/zones.conf.example /etc/bluemon/zones.conf
 #sed -i "s/username = kismet/username=admin/" /etc/bluemon/bluemon.conf
 #sed -i "s/password = kismet/password=$KISMET_ADMIN_PASSWORD/" /etc/bluemon/bluemon.conf
 #Eventually we'll be using Kismet API tokens instead of the kismet username and password.
