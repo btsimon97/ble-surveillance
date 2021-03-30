@@ -374,7 +374,76 @@ class Ui_MainWindow(object):
         self.listWidget_2.setStyleSheet("color: #FFF;")
         self.listWidget_2.setObjectName("listWidget_2")
         self.verticalLayout_8.addWidget(self.listWidget_2)
+        self.pushButton_2 = QtWidgets.QPushButton(self.page_3)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.pushButton_2.setFont(font)
+        self.pushButton_2.setStyleSheet("QPushButton {\n"
+"    color: rgb(255, 255, 255);\n"
+"    background-color: rgb(35, 35, 35);\n"
+"    border: 0px solid;\n"
+"}\n"
+"QPushButton:hover {\n"
+"    background-color: rgb(85, 170, 255);\n"
+"}")
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.verticalLayout_8.addWidget(self.pushButton_2)
         self.stackedWidget.addWidget(self.page_3)
+        self.page_4 = QtWidgets.QWidget()
+        self.page_4.setObjectName("page_4")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.page_4)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.label_4 = QtWidgets.QLabel(self.page_4)
+        font = QtGui.QFont()
+        font.setPointSize(28)
+        self.label_4.setFont(font)
+        self.label_4.setStyleSheet("color: #FFF;")
+        self.label_4.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
+        self.label_4.setObjectName("label_4")
+        self.verticalLayout_2.addWidget(self.label_4)
+        self.listWidget_3 = QtWidgets.QListWidget(self.page_4)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.listWidget_3.setFont(font)
+        self.listWidget_3.setStyleSheet("color: #FFF;")
+        self.listWidget_3.setObjectName("listWidget_3")
+        self.verticalLayout_2.addWidget(self.listWidget_3)
+        self.lineEdit_5 = QtWidgets.QLineEdit(self.page_4)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.lineEdit_5.setFont(font)
+        self.lineEdit_5.setStyleSheet("color: #FFF;")
+        self.lineEdit_5.setObjectName("lineEdit_5")
+        self.verticalLayout_2.addWidget(self.lineEdit_5)
+        self.pushButton_3 = QtWidgets.QPushButton(self.page_4)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.pushButton_3.setFont(font)
+        self.pushButton_3.setStyleSheet("QPushButton {\n"
+"    color: rgb(255, 255, 255);\n"
+"    background-color: rgb(35, 35, 35);\n"
+"    border: 0px solid;\n"
+"}\n"
+"QPushButton:hover {\n"
+"    background-color: rgb(85, 170, 255);\n"
+"}")
+        self.pushButton_3.setObjectName("pushButton_3")
+        self.verticalLayout_2.addWidget(self.pushButton_3)
+        self.pushButton_4 = QtWidgets.QPushButton(self.page_4)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.pushButton_4.setFont(font)
+        self.pushButton_4.setStyleSheet("QPushButton {\n"
+"    color: rgb(255, 255, 255);\n"
+"    background-color: rgb(35, 35, 35);\n"
+"    border: 0px solid;\n"
+"}\n"
+"QPushButton:hover {\n"
+"    background-color: rgb(85, 170, 255);\n"
+"}")
+        self.pushButton_4.setObjectName("pushButton_4")
+        self.verticalLayout_2.addWidget(self.pushButton_4)
+        self.stackedWidget.addWidget(self.page_4)
         self.verticalLayout_5.addWidget(self.stackedWidget)
         self.horizontalLayout_2.addWidget(self.frame_pages)
         self.verticalLayout.addWidget(self.Content)
@@ -407,6 +476,11 @@ class Ui_MainWindow(object):
         self.spinBox_2.setPrefix(_translate("MainWindow", "Tracker Device Timeout: "))
         self.save_2.setText(_translate("MainWindow", "Save"))
         self.label_3.setText(_translate("MainWindow", "Known Devices"))
+        self.pushButton_2.setText(_translate("MainWindow", "See Unknown Devices"))
+        self.label_4.setText(_translate("MainWindow", "Unkown Devices"))
+        self.lineEdit_5.setPlaceholderText(_translate("MainWindow", "Device Nickname"))
+        self.pushButton_3.setText(_translate("MainWindow", "Make Device Known"))
+        self.pushButton_4.setText(_translate("MainWindow", "See Known Devices"))
 
 
 if __name__ == "__main__":

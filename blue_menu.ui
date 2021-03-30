@@ -729,6 +729,121 @@ QPushButton:hover {
                 </property>
                </widget>
               </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_2">
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+	color: rgb(255, 255, 255);
+	background-color: rgb(35, 35, 35);
+	border: 0px solid;
+}
+QPushButton:hover {
+	background-color: rgb(85, 170, 255);
+}</string>
+                </property>
+                <property name="text">
+                 <string>See Unknown Devices</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="page_4">
+             <layout class="QVBoxLayout" name="verticalLayout_2">
+              <item>
+               <widget class="QLabel" name="label_4">
+                <property name="font">
+                 <font>
+                  <pointsize>28</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="text">
+                 <string>Unkown Devices</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignHCenter|Qt::AlignTop</set>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QListWidget" name="listWidget_3">
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="lineEdit_5">
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="placeholderText">
+                 <string>Device Nickname</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_3">
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+	color: rgb(255, 255, 255);
+	background-color: rgb(35, 35, 35);
+	border: 0px solid;
+}
+QPushButton:hover {
+	background-color: rgb(85, 170, 255);
+}</string>
+                </property>
+                <property name="text">
+                 <string>Make Device Known</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_4">
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+	color: rgb(255, 255, 255);
+	background-color: rgb(35, 35, 35);
+	border: 0px solid;
+}
+QPushButton:hover {
+	background-color: rgb(85, 170, 255);
+}</string>
+                </property>
+                <property name="text">
+                 <string>See Known Devices</string>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
            </widget>

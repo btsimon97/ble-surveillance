@@ -25,6 +25,12 @@ class MainWindow(QMainWindow):
         self.ui.btn_page_1.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.page_1))
         self.ui.btn_page_2.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.page_2))
         self.ui.btn_page_3.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.page_3))
+        # view unknown devices
+        self.ui.pushButton_2.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.page_4))
+        # go back to known devices
+        self.ui.pushButton_4.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.page_3))
+        # make unkown device known
+        self.ui.pushButton_3.clicked.connect(self.makeKnown)
         # on save button click save config
         self.ui.save_1.clicked.connect(self.saveZones)
         self.ui.save_2.clicked.connect(self.saveSettings)
@@ -113,6 +119,41 @@ class MainWindow(QMainWindow):
         for section in devices.sections():
             self.ui.listWidget_1.addItem(devices.get(section,'device_nickname'))
 
+    def unknownDevices(self): # display unknown devices in list
+        self.ui.listWidget_3.clear()
+        devices = configparser.ConfigParser()
+        devices.read('unknown.conf.example')
+        for section in devices.sections():
+            self.ui.listWidget_3.addItem(devices.get(section,'device_name')+' | '+devices.get(section,'device_macaddr'))
+
+    def makeKnown(self): # make selected device known and remove from unknown
+        devices = configparser.ConfigParser()
+        devices.read('devices.conf.example')
+        unknown = configparser.ConfigParser()
+        unknown.read('unknown.conf.example')
+        # new nickname
+        nickname = self.ui.lineEdit_5.text()
+        self.ui.lineEdit_5.clear()
+        # if device selected and nickname specified
+        if(nickname and self.ui.listWidget_3.currentItem()):
+            # selected section
+            unknownSection = unknown.sections()[self.ui.listWidget_3.currentRow()]
+            # update known device file to include unknown device
+            devices.add_section(nickname)
+            devices.set(nickname,'device_nickname',nickname.lower())
+            devices.set(nickname,'device_name',unknown.get(unknownSection,'device_name'))
+            devices.set(nickname,'device_macaddr',unknown.get(unknownSection,'device_macaddr'))
+            # remove section from unknown
+            unknown.remove_section(unknown.sections()[self.ui.listWidget_3.currentRow()])
+            # save changes to files
+            with open('devices.conf.example','w') as configFile:
+                    devices.write(configFile)
+            with open('unknown.conf.example','w') as configFile:
+                    unknown.write(configFile)
+            # update current unknown device display
+            self.unknownDevices()
+
+
     def saveZones(self):
         # inputted preferences to save
         currentZone = self.ui.lineEdit_1.text()
@@ -196,6 +237,8 @@ class MainWindow(QMainWindow):
             self.loadSettings()
         elif(index == 2):
             self.displayDevices()
+        elif(index == 3):
+            self.unknownDevices()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
