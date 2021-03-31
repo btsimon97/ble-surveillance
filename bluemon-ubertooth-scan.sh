@@ -74,21 +74,29 @@ SCAN_RESULTS=$($SED_PROG "$SED_HEADER_STRIP_ARGS" <<< "$SCAN_RESULTS")
 #Remove the parts of the scan results we don't care about
 SCAN_RESULTS=$($SED_PROG "$SED_RESULTS_FILTER_REGEX" <<< "$SCAN_RESULTS")
 
+#Quit if nothing to report.
+if [ -z "$SCAN_RESULTS" ]; then
+  echo "Ubertooth BT Scan did not find any BT devices in range."
+  exit 0
+fi
+
 #Python makes data processing really easy when stuff is in JSON format.
 #Let's try to make the output JSON formatted.
-#1. Append {"mac": to begining of line and enclose the MAC address in quotes
-SCAN_RESULTS=$($SED_PROG -E "s/$MAC_REGEX/{\"mac\":\"&\"/" <<< "$SCAN_RESULTS")
-#2. Replace the space/tab b/w the MAC and name with "name":"
+#1. Append opening { to start of results
+SCAN_RESULTS=$($SED_PROG -E 's/^/{/' <<< "$SCAN_RESULTS")
+#2. Append "mac": to begining of line and enclose the MAC address in quotes
+SCAN_RESULTS=$($SED_PROG -E "s/$MAC_REGEX/\"mac\":\"&\"/" <<< "$SCAN_RESULTS")
+#3. Replace the space/tab b/w the MAC and name with "name":"
 SCAN_RESULTS=$($SED_PROG -E "s/$NAME_REGEX/,\"name\":\"/" <<< "$SCAN_RESULTS")
-#3. Finish enclosing the name in quotes
+#4. Finish enclosing the name in quotes
 SCAN_RESULTS=$($SED_PROG -E "s/$NAME_LINE_REGEX/&\"/" <<< "$SCAN_RESULTS")
-#4. Close out each line with the closing }
+#5. Close out each line with the closing }
 SCAN_RESULTS=$($SED_PROG -E 's/$/}/' <<< "$SCAN_RESULTS")
-#5. Add commas to all the lines except the last one.
+#6. Add commas to all the lines except the last one.
 SCAN_RESULTS=$($SED_PROG -E '$!s/$/,/' <<< "$SCAN_RESULTS")
-#6. Remove the linebreaks.
+#7. Remove the linebreaks.
 SCAN_RESULTS=$(tr -d '\n' <<< "$SCAN_RESULTS")
-#7. Enclose Results in brackets
+#8. Enclose Results in brackets
 SCAN_RESULTS=$($SED_PROG -E "s/.*/[&]/" <<< "$SCAN_RESULTS")
 
 #Combine the ubertooth serial number and ISO8601 date and time with the scan
@@ -98,6 +106,6 @@ REPORT_TIME=$(date -Iseconds)
 REPORT="$REPORT,\"scan_time\":\"$REPORT_TIME\""
 REPORT="$REPORT,\"scan_results\":$SCAN_RESULTS}"
 
-#Print the cleaned up scan results and forward them to middleware using nc
-echo "$REPORT" | python3 -mjson.tool
+#Print the scan results and forward them to middleware using nc
+echo "$REPORT"
 echo "$REPORT" | $NC_PROG $NC_ARGS $DATA_SOCKET

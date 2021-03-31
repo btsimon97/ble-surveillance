@@ -4,14 +4,26 @@ import os
 import asyncio
 import socket
 import json
-import websockets
-import pathlib
-import ssl
 import configparser
+import argparse
+import re
+
+
+# Instantiate the arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--config-file", type=str,
+                    help="Specify the bluemon config file to use. Default is /etc/bluemon/bluemon.conf",
+                    default="/etc/bluemon/bluemon.conf")
+parser.add_argument("-d", "--device-file", type=str,
+                    help="Specify the file with the list of known devices to use. Default is /etc/bluemon/devices.conf",
+                    default="/etc/bluemon/devices.conf")
+parser.add_argument("-z", "--zone-file", type=str,
+                    help="Specify the file with the list of zones to use. Default is /etc/bluemon/zones.conf",
+                    default="/etc/bluemon/zones.conf")
+args = parser.parse_args()
 
 # Begin Script Constants Definition
 message_socket_path = '/run/bluemon/eventdata.socket'  # Path and name of the listening socket.
-message_socket = None  # Actual socket we'll be getting messages from. Initialized to None until socket is setup.
 message_socket_permissions = 0o660  # Socket Permissions, see note in setup function for more info.
 message_max_size = 1024  # Max size of single message in bytes. Anything longer is truncated. Must be power of 2
 # End Script Constants Definition
@@ -21,11 +33,96 @@ message_max_size = 1024  # Max size of single message in bytes. Anything longer 
 
 # Read in the config file (this has to be at the top so other functions can read it).
 config = configparser.ConfigParser()
-config.read('/etc/bluemon/bluemon.conf')  # TODO: Implement argparse so filename is set by CLI arg instead of hardcoded
+config.read(args.config_file)
+
+# Read in the zones config file
+zones = configparser.ConfigParser(interpolation=None)
+zones.read(args.zone_file)
+
+# Read in the devices list
+devices = configparser.ConfigParser(interpolation=None)
+devices.read(args.device_file)
 
 # Get environment variables from systemd that we use to connect to the socket.
 LISTEN_FDS = int(os.environ.get("LISTEN_FDS", 0))
 LISTEN_PID = os.environ.get("LISTEN_PID", None) or os.getpid()
+
+
+# sends the appropriate message based on zone settings
+async def send_alert(zone, msg):
+    notification_channels = zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
+    for channel in notification_channels:
+        if channel == "email":
+            print("Sent Email, " + msg)  # placeholders  until we set up messaging service
+        elif channel == "sms":
+            print("Sent SMS,  " + msg)
+        elif channel == "signal":
+            print("Sent SMS,  " + msg)
+            # Format message into notification server JSON
+            # Connect to notification server socket
+            # Send notification message.
+
+
+# Process Received Message
+async def process_message(message_json):
+    zone = 'DEFAULT'
+    detected_by_uuid = message_json['ubertooth_serial_number']
+    for section in zones.sections():
+        if section != 'DEFAULT':
+            if detected_by_uuid == zones.get(section, 'zone_uuid'):
+                zone = section
+    if zones.getboolean(zone, 'monitor_bt_devices'):
+        #  Compile a regex to identify results with an unknown UAP
+        unknown_uap_regex = re.compile('(\?{2}\:){3}(([a-f]|[A-F]|[0-9]){2}\:?){3}')
+        #  Compile regex to extract LAP of device from reported MAC
+        lap_regex = re.compile('(([a-f]|[A-F]|[0-9]){2}\:?){3}')
+        #  Compile regex to extract UAP and LAP of device from reported MAC
+        uap_and_lap_regex = re.compile('(([a-f]|[A-F]|[0-9]){2}\:?){4}')
+        for device in message_json['scan_results']:
+            device_known = False
+            device_nickname = ""
+            device_advertised_name = ""  # what the device advertises its name as in discovery packets, not always known
+            device_mac = device['mac']
+            if 'name' in device:
+                device_advertised_name = device['name']
+                
+            #  if device's UAP isn't known and the zone isn't configured to ignore unknown UAP devices
+            if unknown_uap_regex.match(device['mac']) and not zones.getboolean(zone, 'ignore_devices_with_unknown_uap'):
+                lap = lap_regex.search(device['mac'])[0]  # extract LAP from device mac string
+                for section in devices.sections():  # see if the device's LAP matches a known LAP
+                    current_mac = devices.get(section, 'device_macaddr')
+                    if lap in current_mac:
+                        device_known = True
+                        device_nickname = devices.get(section, 'device_nickname')
+                        device_mac = current_mac
+                        break
+
+            #  device's UAP is known
+            else:
+                uap_and_lap = uap_and_lap_regex.search(device['mac'])[0]
+                for section in devices.sections():  # see if UAP and LAP matches known UAP and LAP
+                    current_mac = devices.get(section, 'device_macaddr')
+                    if uap_and_lap in current_mac:
+                        device_known = True
+                        device_nickname = devices.get(section, 'device_nickname')
+                        device_mac = current_mac
+                        break
+            
+            if device_known:
+                alert_message = "Detected known device " + device_nickname + " (" + device_mac + ")"
+            
+            elif device_advertised_name and (device_advertised_name != device_mac):
+                alert_message = "Detected an unknown device with Name: " + device_advertised_name + " and MAC: " + device_mac
+                
+            else:
+                alert_message = "Detected an unknown device with MAC: " + device_mac
+                
+            print(alert_message, flush=True)
+            await send_alert(zone, alert_message)
+    
+    else:
+        # Ignore device event since zone doesn't care about BT devices
+        print("Ignoring device event due to zone settings.", flush=True)
 
 
 # Handle incoming connections and process received messages.
@@ -35,14 +132,13 @@ async def handle_connection(reader, writer):
         if not message:  # Quit the loop when we stop getting data
             break
         message = message.decode()
+        await process_message(json.loads(message))
         print(message, flush=True)  # Replace this with a function call to dispatch messages to the notification server.
     writer.close()
 
 
 # Socket loop, handles incoming UNIX socket connections (TODO: Implement signal handling so socket is properly cleaned up)
 async def unix_socket():
-    server = None # initialize server variable so its always defined.
-    fd_socket = None # initialize fd_socket variable so its always defined.
     # Detect if we're running through systemd or not
     if LISTEN_FDS == 0:  # Not running via systemd or systemd didn't pass the FDs we need
         # Detect if socket file already exists and clean it up if it does
