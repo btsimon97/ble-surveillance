@@ -3,11 +3,15 @@
 import os
 import asyncio
 import json
+import socket
 import websockets
 import pathlib
 import ssl
 import configparser
 import argparse
+
+HOST = '127.0.0.1'        # Localhost
+NOTIFICATION_PORT = 5555  # Notification server port
 
 # Instantiate the arguments
 parser = argparse.ArgumentParser()
@@ -40,17 +44,33 @@ devices.read(args.device_file)
 # device status(known or unknown) if messsage recieved from kismet
 async def send_alert(zone, msg):
     notification_channels = zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
+    
+    # Format message into notification server JSON
+    message = {
+        'message_type': 'detection',
+        'zone_name': zone,
+        'channel': notification_channels,
+        'devices': msg
+    }
+    
     for channel in notification_channels:
         if channel == "email":
-            print("Sent Email, " + msg)  # placeholders  until we set up messaging service
+            message['email_data'] = {
+            	'recipients': zones.get(zone, 'email_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+        	}
         elif channel == "sms":
-            print("Sent SMS,  " + msg)
+            message['sms_data'] = {
+            	'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+        	}
         elif channel == "signal":
-            print("Sent SMS,  " + msg)
-            # Format message into notification server JSON
-            # Connect to notification server socket
-            # Send notification message.
-
+            message['signal_data'] = {
+            	'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+        	}
+    # Connect to notification server socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, NOTIFICATION_PORT))
+        # Send notification message.
+        s.sendall(str.encode(json.dumps(message)))
 
 # Process Received Message
 async def process_message(message_json):
