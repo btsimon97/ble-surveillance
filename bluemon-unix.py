@@ -4,10 +4,13 @@ import os
 import asyncio
 import socket
 import json
+import socket
 import configparser
 import argparse
 import re
 
+HOST = '127.0.0.1'        # Localhost
+NOTIFICATION_PORT = 5555  # Notification server port
 
 # Instantiate the arguments
 parser = argparse.ArgumentParser()
@@ -51,16 +54,33 @@ LISTEN_PID = os.environ.get("LISTEN_PID", None) or os.getpid()
 # sends the appropriate message based on zone settings
 async def send_alert(zone, msg):
     notification_channels = zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
+    
+    # Format message into notification server JSON
+    message = {
+        'message_type': 'detection',
+        'zone_name': zone,
+        'channel': notification_channels,
+        'devices': msg
+    }
+    
     for channel in notification_channels:
         if channel == "email":
-            print("Sent Email, " + msg)  # placeholders  until we set up messaging service
+            message['email_data'] = {
+            	'recipients': zones.get(zone, 'email_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+        	}
         elif channel == "sms":
-            print("Sent SMS,  " + msg)
+            message['sms_data'] = {
+            	'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+        	}
         elif channel == "signal":
-            print("Sent SMS,  " + msg)
-            # Format message into notification server JSON
-            # Connect to notification server socket
-            # Send notification message.
+            message['signal_data'] = {
+            	'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+        	}
+    # Connect to notification server socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, NOTIFICATION_PORT))
+        # Send notification message.
+        s.sendall(str.encode(json.dumps(message)))
 
 
 # Process Received Message
