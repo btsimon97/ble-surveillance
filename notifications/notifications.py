@@ -21,8 +21,8 @@ if __name__ == "__main__":
                         break
                     msg_data = json.loads(data.decode())
                     print(msg_data)
-                    # if "email" in msg_data.channel:
-                    #     emailer.send_email(msg_data.message_type, msg_data.email_data, msg_data.devices)
+                    if "email" in msg_data['channel']:
+                        emailer.send_email(msg_data['message_type'], msg_data['email_data'], msg_data['devices'])
                     # if "sms" in msg_data.channel:
                     #     sms.send_sms(msg_data.message_type, msg_data.sms_data, msg_data.devices)
 

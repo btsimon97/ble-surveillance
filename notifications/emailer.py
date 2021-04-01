@@ -38,47 +38,37 @@ CONTENT_DETECTED_HTML = """\
 def create_detected_message(bluetooth_devices):
     msg = MIMEMultipart("alternative")
 
-    device_string_text = ""
-    device_string_html = ""
-
-    #create devices string for plaintext
-    for device in bluetooth_devices:
-        device_string_text = device_string_text + device + "\n"
-
-    #create devices string for html
-    for device in bluetooth_devices:
-        device_string_html = device_string_text + "<li>" + device + "</li>"
-
     #embed device strings into content and attach to message object, html will be tried first
-    msg.attach(MIMEText(CONTENT_DETECTED_TEXT.format(text_bluetooth_elements=device_string_text), "plain"))
-    msg.attach(MIMEText(CONTENT_DETECTED_HTML.format(text_bluetooth_elements=device_string_html), "html"))
+    msg.attach(MIMEText(CONTENT_DETECTED_TEXT.format(text_bluetooth_elements=bluetooth_devices), "plain"))
+    msg.attach(MIMEText(CONTENT_DETECTED_HTML.format(html_bluetooth_elements=bluetooth_devices), "html"))
 
     msg['Subject'] = "Unregistered bluetooth devices detected"
 
     return msg
 
 #This function sends the final email, will be used for all types
-def send(recipient, msg, server):
+def send(recipients, msg, server):
     server.login(USERNAME, PASSWORD)
-
-    server.sendmail(USERNAME, recipient, msg.as_string())
+    
+    for recipient in recipients:
+        server.sendmail(USERNAME, recipient, msg.as_string())
     server.quit()
 
     return 1
 
 #This function creates an email for warning the user about detected bluetooth devices
-def send_detected_email(recipient, bluetooth_devices):
+def send_detected_email(recipients, bluetooth_devices):
     
     context = ssl.create_default_context()
 
     with smtplib.SMTP_SSL("smtp.gmail.com", PORT, context=context) as server:
 
         msg = create_detected_message(bluetooth_devices)
-        return send(recipient, msg, server)
+        return send(recipients, msg, server)
 
 def send_email(email_type, channel_data, bluetooth_devices=None):
 
     if(email_type == "detection"):
-        send_detected_email(channel_data.recipient, bluetooth_devices)
+        send_detected_email(channel_data['recipients'], bluetooth_devices)
     # Added an email_type so that different types of emails can potentially be sent
     #(ie. welcome, devices changed, etc.)
