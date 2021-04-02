@@ -2,15 +2,13 @@
 Description=Bluetooth Monitoring Service - Notification Server
 
 #These lines make sure we only try to start this service after the network's up
-#Later we'll want to make sure this starts up before Kismet.
-#If we end up putting notifications in a separate process, we'll need another
-#unit file for it, and we need to make sure that the notifications subsystem
-#starts first.
+#Later we'll want to make sure this starts up before Kismet and bluemon-kismet.
+
 Wants=network-online.target
 After=network-online.target
-#Since systemd manages the UNIX socket this service connects to, we need to
-#mark it as a dependency.
-Requires=bluemon-notify.socket
+#If systemd manages the socket this service connects to, we need to mark it as
+#a dependency.
+#Requires=bluemon-notify.socket
 
 [Service]
 #Startup type for service (simple in this case)
