@@ -1,4 +1,6 @@
 import socket
+import asyncio
+import concurrent.futures
 import json
 
 import emailer
@@ -7,22 +9,46 @@ import sms
 HOST = '127.0.0.1'  # Localhost
 PORT = 5555        # Port to listen on
 
-if __name__ == "__main__":
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((HOST, PORT))
-        s.listen()
-        while True:
-            conn, addr = s.accept()
-            with conn:
-                while True:
-                    data = conn.recv(1024)
-                    if not data:
-                        break
-                    msg_data = json.loads(data.decode())
-                    print(msg_data)
-                    # if "email" in msg_data.channel:
-                    #     emailer.send_email(msg_data.message_type, msg_data.email_data, msg_data.devices)
-                    # if "sms" in msg_data.channel:
-                    #     sms.send_sms(msg_data.message_type, msg_data.sms_data, msg_data.devices)
+async def handle_connection(reader, writer):
+    data = await reader.read()
+    message = json.loads(data.decode())
+    event_loop = asyncio.get_running_loop()  # get current event loop to run sync code in an executor, avoiding deadlock
+
+    if "email" in message['channel']:
+        # Run the email function in a different thread to avoid bogging down the main thread.
+        with concurrent.futures.ThreadPoolExecutor() as email_pool:
+            await event_loop.run_in_executor(email_pool, emailer.send_email,
+                                             message['message_type'], message['email_data'], message['devices'])
+
+    if "sms" in message['channel']:
+        # Run the SMS function in a differen thread to avoid tying up main thread.
+        with concurrent.futures.ThreadPoolExecutor() as sms_pool:
+            await event_loop.run_in_executor(sms_pool, sms.send_sms,
+                                             message['message_type'], message['sms_data'], message['devices'])
+
+
+async def main():
+    server = await asyncio.start_server(handle_connection, HOST, PORT)
+    async with server:
+        await server.serve_forever()
+
+#if __name__ == "__main__":
+#
+#    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+#        s.bind((HOST, PORT))
+#        s.listen()
+#        while True:
+#            conn, addr = s.accept()
+#            with conn:
+#                while True:
+#                    data = conn.recv(1024)
+#                    if not data:
+#                        break
+#                    msg_data = json.loads(data.decode())
+#                    print(msg_data)
+#                    # if "email" in msg_data.channel:
+#                    #     emailer.send_email(msg_data.message_type, msg_data.email_data, msg_data.devices)
+#                    # if "sms" in msg_data.channel:
+#                    #     sms.send_sms(msg_data.message_type, msg_data.sms_data, msg_data.devices)
 
