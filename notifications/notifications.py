@@ -11,21 +11,26 @@ PORT = 5555        # Port to listen on
 
 
 async def handle_connection(reader, writer):
-    data = await reader.read()
-    message = json.loads(data.decode())
-    event_loop = asyncio.get_running_loop()  # get current event loop to run sync code in an executor, avoiding deadlock
+    while True:
+        message = await reader.read()
+        if not message:  # Quit loop once data stops being received for connection.
+            break
+        message = json.loads(message.decode())
+        event_loop = asyncio.get_running_loop()  # get event loop for running sync code in executor to avoid deadlock
 
-    if "email" in message['channel']:
-        # Run the email function in a different thread to avoid bogging down the main thread.
-        with concurrent.futures.ThreadPoolExecutor() as email_pool:
-            await event_loop.run_in_executor(email_pool, emailer.send_email,
-                                             message['message_type'], message['email_data'], message['devices'])
+        if "email" in message['channel']:
+            # Run the email function in a different thread to avoid bogging down the main thread.
+            with concurrent.futures.ThreadPoolExecutor() as email_pool:
+                await event_loop.run_in_executor(email_pool, emailer.send_email,
+                                                 message['message_type'], message['email_data'], message['devices'])
 
-    if "sms" in message['channel']:
-        # Run the SMS function in a differen thread to avoid tying up main thread.
-        with concurrent.futures.ThreadPoolExecutor() as sms_pool:
-            await event_loop.run_in_executor(sms_pool, sms.send_sms,
-                                             message['message_type'], message['sms_data'], message['devices'])
+        if "sms" in message['channel']:
+            # Run the SMS function in a differen thread to avoid tying up main thread.
+            with concurrent.futures.ThreadPoolExecutor() as sms_pool:
+                await event_loop.run_in_executor(sms_pool, sms.send_sms,
+                                                 message['message_type'], message['sms_data'], message['devices'])
+
+    writer.close()  # close the writer since connection is done now.
 
 
 async def main():
