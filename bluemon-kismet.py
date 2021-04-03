@@ -66,7 +66,8 @@ async def send_alert(zone, msg):
                 'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
             }
     # Connect to notification server socket and send message
-    reader, writer = await asyncio.open_connection(HOST, NOTIFICATION_PORT)
+    reader, writer = await asyncio.open_connection(config.get('notifications', 'server_name'),
+                                                   config.getint('notifications', 'server_port'))
     writer.write(json.dumps(message).encode())
     writer.close()
 

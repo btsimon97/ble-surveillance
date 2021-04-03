@@ -1,11 +1,12 @@
 #This config file governs various settings for how the BLE surveillance program works.
 #The kismet section governs how the program interfaces with Kismet to retrieve data.
 [kismet]
-#Set the hostname/IP of the kismet server.
-#This can be localhost or a remote host.
+#Set the hostname/IP of the kismet server. This can be localhost or a remote
+#host.
 server_name = localhost
-#Set the port number to connect to Kismet on.
-#This is usually 2501 but may be different if Kismet is on a remote host.
+
+#Set the port number to connect to Kismet on. This is usually 2501 but may be
+#different if Kismet is on a remote host.
 server_port = 2501
 
 #Sets whether the connection to the Kismet server should use HTTPS. Kismet's
@@ -24,3 +25,14 @@ tls_cert_file = /etc/ssl/certs/ca-bundle.crt
 #manually if needed. See kismet's documentation for generating API tokens if
 #you need to change the API token or generate additional tokens.
 api_token = none
+
+#The notifications section governs how the program connects to the notification
+#server to send messages when an alertable device event occurs.
+[notifications]
+#Set the hostname/IP of the notification server. This can be localhost or a
+#remote host.
+server_name = localhost
+
+#Set the port number to connect to the notification server on. This is usually
+#5555 but may be a different port number if running on a remote host.
+server_port = 5555
