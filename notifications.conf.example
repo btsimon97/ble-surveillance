@@ -1,0 +1,36 @@
+#This file is used to configure settings for bluemon's notification server.
+
+[email]
+#hostname or IP address of the SMTP server to connect to
+smtp_servername = smtp.example.com
+
+#port number to connect to the SMTP server on
+smtp_portnumber = 25
+
+#how to connect to the server with SMTP. Must be one of the following:
+#	1. plain	- don't use encryption to connect to the server at all
+#	2. STARTTLS	- use the SMTP STARTLS command to encrypt the connection
+#	3. SSL		- start the connection already encrypted
+smtp_connection_method = plain
+
+#username to connect to the SMTP server as
+smtp_username = example
+
+#password to use for connecting to the SMTP server
+smtp_password = password123
+
+#email address to use for sending emails and as the reply-to.
+email_address = example@gmail.com
+
+#subject line to use in alert emails
+email_subject = Bluetooth Device Detection Alert
+
+[sms]
+#The SID for the twilio account being used to send SMS messages
+twilio_account_sid = 87698
+
+#The authentication token for the twilio account being used to send SMS messages
+twilio_auth_token = 12345abcdef
+
+#the SMS number that the messages should show as being sent from (numbers only, no special characters)
+sender_phone_number = 3525555555
