@@ -25,7 +25,7 @@ async def handle_connection(reader, writer):
                                                  message['message_type'], message['email_data'], message['devices'])
 
         if "sms" in message['channel']:
-            # Run the SMS function in a differen thread to avoid tying up main thread.
+            # Run the SMS function in a different thread to avoid tying up main thread.
             with concurrent.futures.ThreadPoolExecutor() as sms_pool:
                 await event_loop.run_in_executor(sms_pool, sms.send_sms,
                                                  message['message_type'], message['sms_data'], message['devices'])
