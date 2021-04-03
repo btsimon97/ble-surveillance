@@ -7,8 +7,24 @@ import argparse
 import emailer
 import sms
 
-HOST = '127.0.0.1'  # Localhost
-PORT = 5555        # Port to listen on
+# Instantiate the arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("-a", "--bind-address", type=str,
+                    help="IP address to bind to for connections. Default is 0.0.0.0, or bind to all interfaces",
+                    default="0.0.0.0")
+
+parser.add_argument("-c", "--config-file", type=str,
+                    help="Specify the notifications config file to use. Default is /etc/bluemon/notifications.conf",
+                    default="/etc/bluemon/notifications.conf")
+
+parser.add_argument("-p", "--bind-port", type=int,
+                    help="TCP port number to bind to for connections. Default is 5555.", 
+                    default=5555)
+args = parser.parse_args()
+
+# Read in the config file (this has to be at the top so other functions can read it).
+config = configparser.ConfigParser()
+config.read(args.config_file)
 
 
 async def handle_connection(reader, writer):
@@ -35,7 +51,7 @@ async def handle_connection(reader, writer):
 
 
 async def main():
-    server = await asyncio.start_server(handle_connection, HOST, PORT)
+    server = await asyncio.start_server(handle_connection, args.bind_address, args.bind_port)
     async with server:
         await server.serve_forever()
 
