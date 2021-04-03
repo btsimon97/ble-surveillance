@@ -2,7 +2,8 @@ import socket
 import asyncio
 import concurrent.futures
 import json
-
+import configparser
+import argparse
 import emailer
 import sms
 
@@ -37,6 +38,10 @@ async def main():
     server = await asyncio.start_server(handle_connection, HOST, PORT)
     async with server:
         await server.serve_forever()
+
+
+asyncio.run(main())
+
 
 #if __name__ == "__main__":
 #
