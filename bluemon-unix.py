@@ -2,7 +2,6 @@
 
 import os
 import asyncio
-import socket
 import json
 import socket
 import configparser
@@ -66,21 +65,20 @@ async def send_alert(zone, msg):
     for channel in notification_channels:
         if channel == "email":
             message['email_data'] = {
-            	'recipients': zones.get(zone, 'email_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
-        	}
+                'recipients': zones.get(zone, 'email_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+            }
         elif channel == "sms":
             message['sms_data'] = {
-            	'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
-        	}
+                'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+            }
         elif channel == "signal":
             message['signal_data'] = {
-            	'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
-        	}
-    # Connect to notification server socket
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, NOTIFICATION_PORT))
-        # Send notification message.
-        s.sendall(str.encode(json.dumps(message)))
+                'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+            }
+    # Connect to notification server socket and send message
+    reader, writer = await asyncio.open_connection(HOST, NOTIFICATION_PORT)
+    writer.write(json.dumps(message).encode())
+    writer.close()
 
 
 # Process Received Message

@@ -3,7 +3,6 @@
 import os
 import asyncio
 import json
-import socket
 import websockets
 import pathlib
 import ssl
@@ -44,7 +43,7 @@ devices.read(args.device_file)
 # device status(known or unknown) if messsage recieved from kismet
 async def send_alert(zone, msg):
     notification_channels = zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
-    
+
     # Format message into notification server JSON
     message = {
         'message_type': 'detection',
@@ -52,25 +51,25 @@ async def send_alert(zone, msg):
         'channel': notification_channels,
         'devices': msg
     }
-    
+
     for channel in notification_channels:
         if channel == "email":
             message['email_data'] = {
-            	'recipients': zones.get(zone, 'email_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
-        	}
+                'recipients': zones.get(zone, 'email_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+            }
         elif channel == "sms":
             message['sms_data'] = {
-            	'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
-        	}
+                'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+            }
         elif channel == "signal":
             message['signal_data'] = {
-            	'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
-        	}
-    # Connect to notification server socket
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, NOTIFICATION_PORT))
-        # Send notification message.
-        s.sendall(str.encode(json.dumps(message)))
+                'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+            }
+    # Connect to notification server socket and send message
+    reader, writer = await asyncio.open_connection(HOST, NOTIFICATION_PORT)
+    writer.write(json.dumps(message).encode())
+    writer.close()
+
 
 # Process Received Message
 async def process_message(message_json):
@@ -120,7 +119,7 @@ async def process_message(message_json):
             await send_alert(zone, alert_message)
     else:
         # Don't fire notification, but print something saying we got something to ignore.
-        print("Ignoring Device event due to notification settings.", flush=True) 
+        print("Ignoring Device event due to notification settings.", flush=True)
 
 
 async def kismet_websocket(configuration):
@@ -188,7 +187,7 @@ async def kismet_websocket(configuration):
 # Begin Main Script Invocation
 event_loop = asyncio.get_event_loop()
 try:
-    kismet_websocket_task = asyncio.ensure_future(kismet_websocket(config))  # Add websocket coroutine to get Kismet data
+    kismet_websocket_task = asyncio.ensure_future(kismet_websocket(config))  # Add websocket coroutine for Kismet
     event_loop.run_forever()
 except KeyboardInterrupt:
     pass
