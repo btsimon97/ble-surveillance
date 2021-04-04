@@ -90,19 +90,20 @@ async def process_message(message_json):
         if section != 'DEFAULT':
             if detected_by_uuid == zones.get(section, 'zone_uuid'):
                 zone = section
+                break
     # Determine if notification settings for zone require notification and fire one if they do.
     alert_message = None
     if (message_json['NEW_DEVICE']['kismet.device.base.type'] == "BTLE" or message_json['NEW_DEVICE']['kismet.device.base.type'] == "BTLE Device") and zones.getboolean(zone, 'monitor_btle_devices'):
         if zones.getboolean(zone, 'alert_on_unrecognized') and not device_known:
             # Fire Notification
             if device_name == device_mac:
-                alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown device with MAC: " \
+                alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown BTLE device with MAC: " \
                                 + device_mac
             else:
-                alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown device with Name: " \
+                alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown BTLE device with Name: " \
                                 + device_name + " and MAC: " + device_mac
         elif zones.getboolean(zone, 'alert_on_recognized'):
-            alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known device " + device_nickname \
+            alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known BTLE device " + device_nickname \
                             + " (" + device_mac + ")"
 
         if alert_message:
@@ -112,11 +113,14 @@ async def process_message(message_json):
     elif zones.getboolean(zone, 'monitor_bt_devices'):
         if zones.getboolean(zone, 'alert_on_unrecognized') and not device_known:
             if device_name == device_mac:
-                alert_message = "Detected an unknown device with MAC: " + device_mac
+                alert_message = "Zone " + zones.get(zone, 'zone_name') + "detected an unknown BT device with MAC: " \
+                                + device_mac
             else:
-                alert_message = "Detected an unknown device with Name: " + device_name + " and MAC: " + device_mac
+                alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown BT device with Name: " \
+                                + device_name + " and MAC: " + device_mac
         elif zones.getboolean(zone, 'alert_on_recognized'):
-            alert_message = "Detected known device " + device_nickname + " (" + device_mac + ")"
+            alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known BT device " + device_nickname \
+                            + " (" + device_mac + ")"
 
         if alert_message:
             print(alert_message, flush=True)
