@@ -10,7 +10,8 @@ from email import policy
 # Build the alert message for sending using SMTPlib
 def build_alert_email(email_config, recipients, message_data):
     alert_email_message = EmailMessage(policy=policy.SMTP)  # set the message policy to use CRLF line endings.
-    alert_email_message.set_content(textwrap.fill(message_data), width=78)  # Set message body
+    wrapped_text = textwrap.fill(message_data, width=78)
+    alert_email_message.set_content(wrapped_text)  # Set message body
     alert_email_message['Subject'] = email_config.get('email', 'email_subject')  # set subject line according to config.
     alert_email_message['From'] = email_config.get('email', 'email_address')  # Set from address using config
     alert_email_message['To'] = recipients  # Set recipients from passed in value
