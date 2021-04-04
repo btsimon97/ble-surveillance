@@ -124,6 +124,10 @@ async def process_message(message_json):
                         device_nickname = devices.get(section, 'device_nickname')
                         device_mac = current_mac
                         break
+
+            # UAP isn't known and zone doesn't want unknown UAPs, or some other invalid state occurred.
+            else:
+                continue  # skip rest of function and go to next device in list.
             
             if device_known:
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known device " + device_nickname \
