@@ -39,6 +39,5 @@ twilio_account_sid = 87698
 #The authentication token for the twilio account being used to send SMS messages
 twilio_auth_token = 12345abcdef
 
-#The SMS number that the messages should show as being sent from (numbers only,
-#no special characters)
-sender_phone_number = 3525555555
+#The SMS number that SMS messages should be being sent from in Twilio
+sender_phone_number = 352-555-5555
