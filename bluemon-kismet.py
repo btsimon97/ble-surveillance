@@ -7,6 +7,7 @@ import pathlib
 import ssl
 import configparser
 import argparse
+import logging
 
 # Instantiate the arguments
 parser = argparse.ArgumentParser()
@@ -19,6 +20,13 @@ parser.add_argument("-d", "--device-file", type=str,
 parser.add_argument("-z", "--zone-file", type=str,
                     help="Specify the file with the list of zones to use. Default is /etc/bluemon/zones.conf",
                     default="/etc/bluemon/zones.conf")
+parser.add_argument("-ll", "--log-level", type=str,
+                    help="Specify the logging level for the program. Defaults to INFO level. "
+                         "See here for other logging levels: https://docs.python.org/3/library/logging.html#logging-levels",
+                    default="INFO")
+parser.add_argument("-lf", "--log-file", type=str,
+                   help="Specify the logging file to use. Default is /var/log/bluemon/bluemon-kismet.log",
+                    default="/var/log/bluemon/bluemon-kismet.log")
 args = parser.parse_args()
 
 # Begin Script Functions Definition
@@ -35,6 +43,9 @@ zones.read(args.zone_file)
 devices = configparser.ConfigParser(interpolation=None)
 devices.read(args.device_file)
 
+
+# Setup logging
+#logging.basicConfig()
 
 # device status(known or unknown) if messsage recieved from kismet
 async def send_alert(zone, msg):
