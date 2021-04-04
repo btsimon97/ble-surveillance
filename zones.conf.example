@@ -10,6 +10,8 @@
 #zone's section and cannot be set in the default section
 
 [DEFAULT]
+#Specify a default name for a given zone in case it is left unspecified
+zone_name = Default Zone
 #Fire an alert when an unknown device is detected
 alert_on_unrecognized = true
 

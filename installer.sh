@@ -155,6 +155,8 @@ GROUP_MEMS="$(groupmems -g dialout -l)"
 if [[ "$GROUP_MEMS" != *"$PROG_USERNAME"* ]]; then
 	echo "Adding $PROG_USERNAME to dialout group..."
 	adduser $PROG_USERNAME dialout
+	#Also add this user to plugdev so ubertooth devices work.
+	adduser $PROG_USERNAME plugdev
 	#groupmems has a weird quirk with PAM on Debian based OSes, so we use
 	#adduser now instead. You can uncomment the groupmems line if you want
 	#The old behavior, but remember to comment the adduser line first.
