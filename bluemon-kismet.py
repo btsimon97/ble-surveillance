@@ -38,7 +38,8 @@ devices.read(args.device_file)
 
 # device status(known or unknown) if messsage recieved from kismet
 async def send_alert(zone, msg):
-    notification_channels = zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
+    notification_channels = [channel.strip() for channel in
+                             zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")]
 
     # Format message into notification server JSON
     message = {
@@ -50,16 +51,22 @@ async def send_alert(zone, msg):
 
     for channel in notification_channels:
         if channel == "email":
+            recipients = [recipient.strip() for recipient in
+                          zones.get(zone, 'email_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")]
             message['email_data'] = {
-                'recipients': zones.get(zone, 'email_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+                'recipients': recipients
             }
         elif channel == "sms":
+            recipients = [recipient.strip() for recipient in
+                          zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")]
             message['sms_data'] = {
-                'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+                'recipients': recipients
             }
         elif channel == "signal":
+            recipients = [recipient.strip() for recipient in
+                          zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")]
             message['signal_data'] = {
-                'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+                'recipients': recipients
             }
     # Connect to notification server socket and send message
     reader, writer = await asyncio.open_connection(config.get('notifications', 'server_name'),

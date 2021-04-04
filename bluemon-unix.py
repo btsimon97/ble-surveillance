@@ -8,7 +8,6 @@ import configparser
 import argparse
 import re
 
-
 # Instantiate the arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--config-file", type=str,
@@ -50,8 +49,9 @@ LISTEN_PID = os.environ.get("LISTEN_PID", None) or os.getpid()
 
 # sends the appropriate message based on zone settings
 async def send_alert(zone, msg):
-    notification_channels = zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")
-    
+    notification_channels = [channel.strip() for channel in 
+                             zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")]
+
     # Format message into notification server JSON
     message = {
         'message_type': 'detection',
@@ -59,22 +59,28 @@ async def send_alert(zone, msg):
         'channel': notification_channels,
         'devices': msg
     }
-    
+
     for channel in notification_channels:
         if channel == "email":
+            recipients = [recipient.strip() for recipient in 
+                          zones.get(zone, 'email_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")]
             message['email_data'] = {
-                'recipients': zones.get(zone, 'email_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+                'recipients': recipients
             }
         elif channel == "sms":
+            recipients = [recipient.strip() for recipient in 
+                          zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")]
             message['sms_data'] = {
-                'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+                'recipients': recipients
             }
         elif channel == "signal":
+            recipients = [recipient.strip() for recipient in 
+                          zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")]
             message['signal_data'] = {
-                'recipients': zones.get(zone, 'sms_recipients').replace(']', '').replace('[', '').replace('"', '').split(",")
+                'recipients': recipients
             }
     # Connect to notification server socket and send message
-    reader, writer = await asyncio.open_connection(config.get('notifications', 'server_name'), 
+    reader, writer = await asyncio.open_connection(config.get('notifications', 'server_name'),
                                                    config.getint('notifications', 'server_port'))
     writer.write(json.dumps(message).encode())
     writer.close()
@@ -102,7 +108,7 @@ async def process_message(message_json):
             device_mac = device['mac']
             if 'name' in device:
                 device_advertised_name = device['name']
-                
+
             #  if device's UAP isn't known and the zone isn't configured to ignore unknown UAP devices
             if unknown_uap_regex.match(device['mac']) and not zones.getboolean(zone, 'ignore_devices_with_unknown_uap'):
                 lap = lap_regex.search(device['mac'])[0]  # extract LAP from device mac string
@@ -128,15 +134,15 @@ async def process_message(message_json):
             # UAP isn't known and zone doesn't want unknown UAPs, or some other invalid state occurred.
             else:
                 continue  # skip rest of function and go to next device in list.
-            
+
             if device_known and zones.getboolean(zone, 'alert_on_recognized'):
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known device " + device_nickname \
                                 + " (" + device_mac + ")"
-            
+
             elif device_advertised_name and (device_advertised_name != device_mac) and zones.getboolean(zone, 'alert_on_unrecognized'):
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown device with Name: " \
                                 + device_advertised_name + " and MAC: " + device_mac
-                
+
             elif zones.getboolean(zone, 'alert_on_unrecognized'):
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown device with MAC: " \
                                 + device_mac
@@ -144,7 +150,7 @@ async def process_message(message_json):
             if alert_message:
                 print(alert_message, flush=True)
                 await send_alert(zone, alert_message)
-    
+
     else:
         # Ignore device event since zone doesn't care about BT devices
         print("Ignoring device event due to zone settings.", flush=True)
@@ -176,6 +182,7 @@ async def unix_socket():
         server = await asyncio.start_unix_server(handle_connection, sock=fd_socket, start_serving=False)
     async with server:
         await server.serve_forever()
+
 
 # End Script Functions Definition
 
