@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import os
 import asyncio
 import json
 import websockets
@@ -8,9 +7,6 @@ import pathlib
 import ssl
 import configparser
 import argparse
-
-HOST = '127.0.0.1'        # Localhost
-NOTIFICATION_PORT = 5555  # Notification server port
 
 # Instantiate the arguments
 parser = argparse.ArgumentParser()
