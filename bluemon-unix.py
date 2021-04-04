@@ -129,20 +129,21 @@ async def process_message(message_json):
             else:
                 continue  # skip rest of function and go to next device in list.
             
-            if device_known:
+            if device_known and zones.getboolean(zone, 'alert_on_recognized'):
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known device " + device_nickname \
                                 + " (" + device_mac + ")"
             
-            elif device_advertised_name and (device_advertised_name != device_mac):
+            elif device_advertised_name and (device_advertised_name != device_mac) and zones.getboolean(zone, 'alert_on_unrecognized'):
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown device with Name: " \
                                 + device_advertised_name + " and MAC: " + device_mac
                 
-            else:
+            elif zones.getboolean(zone, 'alert_on_unrecognized'):
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown device with MAC: " \
                                 + device_mac
-                
-            print(alert_message, flush=True)
-            await send_alert(zone, alert_message)
+
+            if alert_message:
+                print(alert_message, flush=True)
+                await send_alert(zone, alert_message)
     
     else:
         # Ignore device event since zone doesn't care about BT devices
