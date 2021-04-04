@@ -96,11 +96,14 @@ async def process_message(message_json):
         if zones.getboolean(zone, 'alert_on_unrecognized') and not device_known:
             # Fire Notification
             if device_name == device_mac:
-                alert_message = "Detected an unknown device with MAC: " + device_mac
+                alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown device with MAC: " \
+                                + device_mac
             else:
-                alert_message = "Detected an unknown device with Name: " + device_name + " and MAC: " + device_mac
+                alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown device with Name: " \
+                                + device_name + " and MAC: " + device_mac
         elif zones.getboolean(zone, 'alert_on_recognized'):
-            alert_message = "Detected known device " + device_nickname + " (" + device_mac + ")"
+            alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known device " + device_nickname \
+                            + " (" + device_mac + ")"
 
         if alert_message:
             print(alert_message, flush=True)
