@@ -1,74 +1,64 @@
-import smtplib, ssl, os
+import smtplib
+import ssl
+import textwrap
+import configparser
 
-from dotenv import load_dotenv
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from email.message import EmailMessage
+from email import policy
 
-load_dotenv()
 
-#EMAILER CONSTANTS
-PORT = 465
-PASSWORD = os.environ.get('EMAIL_PASSWORD')
-USERNAME = os.environ.get('EMAIL_USERNAME')
+# Build the alert message for sending using SMTPlib
+def build_alert_email(email_config, recipients, message_data):
+    alert_email_message = EmailMessage(policy=policy.SMTP)  # set the message policy to use CRLF line endings.
+    alert_email_message.set_content(textwrap.fill(message_data), width=78)  # Set message body
+    alert_email_message['Subject'] = email_config.get('email', 'email_subject')  # set subject line according to config.
+    alert_email_message['From'] = email_config.get('email', 'email_address')  # Set from address using config
+    alert_email_message['To'] = recipients  # Set recipients from passed in value
+    return alert_email_message  # return constructed message to caller
 
-# MESSAGES
-#===========
-# For now these will be stored here, although they can be extracted to another file and imported
-# if this becomes too cluttered. The formate for message values is CONTENT_{TYPE}_{FORMAT}
-CONTENT_DETECTED_TEXT = """\
-Unregistered bluetooth devices have been detected!
-Hi, we detected these unregisted bluetooth devices near your detector:
-{text_bluetooth_elements}
-"""
-CONTENT_DETECTED_HTML = """\
-<html>
-    <head>Unregistered bluetooth devices have been detected!</head>
-    <body>
-        <p>Hi, we detected these unregisted bluetooth devices near your detector:</p>
-        <p>
-            <ul>
-                {html_bluetooth_elements}
-            </ul>
-        </p>
-    </body>
-</html>
-"""
 
-#This function creates the message object and formats the devices onto the content
-def create_detected_message(bluetooth_devices):
-    msg = MIMEMultipart("alternative")
+# External function called by notification server.
+def send_email(email_config, email_type, channel_data, bluetooth_devices=None):
+    message = None
+    if email_type == "detection":
+        # Construct message to be sent
+        message = build_alert_email(email_config, channel_data['recipients'], bluetooth_devices)
 
-    #embed device strings into content and attach to message object, html will be tried first
-    msg.attach(MIMEText(CONTENT_DETECTED_TEXT.format(text_bluetooth_elements=bluetooth_devices), "plain"))
-    msg.attach(MIMEText(CONTENT_DETECTED_HTML.format(html_bluetooth_elements=bluetooth_devices), "html"))
-
-    msg['Subject'] = "Unregistered bluetooth devices detected"
-
-    return msg
-
-#This function sends the final email, will be used for all types
-def send(recipients, msg, server):
-    server.login(USERNAME, PASSWORD)
+    # Server connection is NOT encrypted at all.
+    if email_config.get('email', 'smtp_connection_method') == "plain":
+        with smtplib.SMTP(host=email_config.get('email', 'smtp_servername'),
+                          port=email_config.getint('email', 'smtp_portnumber')) as server:
+            
+            # Authenticate to server if it requires authentication
+            if email_config.getboolean('email', 'smtp_authentication_required'):
+                server.login(user=email_config.get('email', 'smtp_username'), 
+                             password=email_config.get('email', 'smtp_password'))
+            server.send_message(message)  # Send constructed message
+            server.quit()  # close the SMTP server connection.
     
-    for recipient in recipients:
-        server.sendmail(USERNAME, recipient, msg.as_string())
-    server.quit()
+    # Server connection starts unencrypted then upgrades to encrypted via STARTTLS command
+    elif email_config.get('email', 'smtp_connection_method') == "STARTTLS":
+        with smtplib.SMTP(host=email_config.get('email', 'smtp_servername'),
+                          port=email_config.getint('email', 'smtp_portnumber')) as server:
+            
+            # Send STARTTLS to upgrade connection to encrypted
+            server.starttls(context=ssl.create_default_context())
+            # Authenticate to server if it requires authentication
+            if email_config.getboolean('email', 'smtp_authentication_required'):
+                server.login(user=email_config.get('email', 'smtp_username'), 
+                             password=email_config.get('email', 'smtp_password'))
+            server.send_message(message)  # Send constructed message
+            server.quit()  # close the SMTP server connection.
 
-    return 1
-
-#This function creates an email for warning the user about detected bluetooth devices
-def send_detected_email(recipients, bluetooth_devices):
-    
-    context = ssl.create_default_context()
-
-    with smtplib.SMTP_SSL("smtp.gmail.com", PORT, context=context) as server:
-
-        msg = create_detected_message(bluetooth_devices)
-        return send(recipients, msg, server)
-
-def send_email(email_type, channel_data, bluetooth_devices=None):
-
-    if(email_type == "detection"):
-        send_detected_email(channel_data['recipients'], bluetooth_devices)
-    # Added an email_type so that different types of emails can potentially be sent
-    #(ie. welcome, devices changed, etc.)
+    # For all other possible values, assume connection must already start encrypted with TLS
+    else:
+        with smtplib.SMTP_SSL(host=email_config.get('email', 'smtp_servername'),
+                              port=email_config.getint('email', 'smtp_portnumber'),
+                              context=ssl.create_default_context()) as server:
+            
+            # Authenticate to server if it requires authentication
+            if email_config.getboolean('email', 'smtp_authentication_required'):
+                server.login(user=email_config.get('email', 'smtp_username'),
+                             password=email_config.get('email', 'smtp_password'))
+            server.send_message(message)  # Send constructed message
+            server.quit()  # close the SMTP server connection.
