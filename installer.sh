@@ -210,6 +210,7 @@ chmod 550 /etc/bluemon
 cp bluemon.conf.example /etc/bluemon
 cp zones.conf.example /etc/bluemon
 cp devices.conf.example /etc/bluemon
+cp notifications.conf.example /etc/bluemon
 
 #Configure Kismet Service
 sed -i "s/root/$PROG_USERNAME/" /usr/lib/systemd/system/kismet.service
@@ -235,10 +236,12 @@ if [ $? != 0 ]; then
   API_TOKEN="error"
 fi
 
-#Set kismet password for Bluemon
+#Create default config files from sample configs
 cp /etc/bluemon/bluemon.conf.example /etc/bluemon/bluemon.conf
 cp /etc/bluemon/zones.conf.example /etc/bluemon/zones.conf
 cp /etc/bluemon/devices.conf.example /etc/bluemon/devices.conf
+cp /etc/bluemon/notifications.conf.example /etc/bluemon/notifications.conf
+
 #set the API token in Bluemon's config.
 sed -i "s/api_token = none/api_token=$API_TOKEN/" /etc/bluemon/bluemon.conf
 
@@ -250,7 +253,7 @@ systemctl enable bluemon-unix.socket
 systemctl start bluemon-unix.socket
 
 #Install the crontab entry (commented out) if its not already present
-$CRONTAB_ENTRY="#*/2 * * * *	bluemon	/opt/bluemon/bluemon-ubertooth-scan"
+CRONTAB_ENTRY="#*/2 * * * *	bluemon	/opt/bluemon/bluemon-ubertooth-scan"
 if ! grep -Fxq "$CRONTAB_ENTRY" /etc/crontab; then
   echo "$CRONTAB_ENTRY" >> /etc/crontab
 fi
