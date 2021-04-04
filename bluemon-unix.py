@@ -126,13 +126,16 @@ async def process_message(message_json):
                         break
             
             if device_known:
-                alert_message = "Detected known device " + device_nickname + " (" + device_mac + ")"
+                alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known device " + device_nickname \
+                                + " (" + device_mac + ")"
             
             elif device_advertised_name and (device_advertised_name != device_mac):
-                alert_message = "Detected an unknown device with Name: " + device_advertised_name + " and MAC: " + device_mac
+                alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown device with Name: " \
+                                + device_advertised_name + " and MAC: " + device_mac
                 
             else:
-                alert_message = "Detected an unknown device with MAC: " + device_mac
+                alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown device with MAC: " \
+                                + device_mac
                 
             print(alert_message, flush=True)
             await send_alert(zone, alert_message)
