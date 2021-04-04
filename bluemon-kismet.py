@@ -113,7 +113,7 @@ async def process_message(message_json):
     elif message_json['NEW_DEVICE']['kismet.device.base.type'] == "BR/EDR" and zones.getboolean(zone, 'monitor_bt_devices'):
         if zones.getboolean(zone, 'alert_on_unrecognized') and not device_known:
             if device_name == device_mac:
-                alert_message = "Zone " + zones.get(zone, 'zone_name') + "detected an unknown BT device with MAC: " \
+                alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown BT device with MAC: " \
                                 + device_mac
             else:
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown BT device with Name: " \
