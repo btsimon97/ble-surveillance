@@ -115,7 +115,7 @@ async def process_message(message_json):
                         break
 
             #  device's UAP is known
-            else:
+            elif not unknown_uap_regex.match(device['mac']):
                 uap_and_lap = uap_and_lap_regex.search(device['mac'])[0]
                 for section in devices.sections():  # see if UAP and LAP matches known UAP and LAP
                     current_mac = devices.get(section, 'device_macaddr')
