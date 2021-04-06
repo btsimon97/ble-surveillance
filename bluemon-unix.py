@@ -22,11 +22,11 @@ parser.add_argument("-z", "--zone-file", type=str,
                     default="/etc/bluemon/zones.conf")
 parser.add_argument("-ll", "--log-level", type=str,
                     help="Specify the logging level for the program. Defaults to INFO level. "
-                         "See here for other logging levels: https://docs.python.org/3/library/logging.html#logging-levels",
-                    default="INFO")
+                         "Valid options are DEBUG, INFO, WARNING, ERROR, and CRITICAL",
+                    default="INFO", choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'])
 parser.add_argument("-lf", "--log-file", type=str,
                    help="Specify the logging file to use. Default is /var/log/bluemon/bluemon-kismet.log",
-                    default="/var/log/bluemon/bluemon-kismet.log")
+                    default="/var/log/bluemon/bluemon-unix.log")
 args = parser.parse_args()
 
 # Begin Script Constants Definition
@@ -37,7 +37,7 @@ message_max_size = 1024  # Max size of single message in bytes. Anything longer 
 
 
 # Setup logging
-# logging.basicConfig()
+logging.basicConfig(filename=args.log_file, level=args.log_level, format='%(asctime)s %(levelname)s:%(message)s')
 
 # Begin Script Functions Definition
 
@@ -145,7 +145,7 @@ async def process_message(message_json):
             # UAP isn't known and zone doesn't want unknown UAPs, or some other invalid state occurred.
             else:
                 continue  # skip rest of function and go to next device in list.
-
+            alert_message = None
             if device_known and zones.getboolean(zone, 'alert_on_recognized'):
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known device " + device_nickname \
                                 + " (" + device_mac + ")"
@@ -158,13 +158,32 @@ async def process_message(message_json):
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown device with MAC: " \
                                 + device_mac
 
+            # Build the log message for writing to the logs.
+            log_message = "DEVICE DETECTION: Zone Name: " + zones.get(zone, 'zone_name') + " Zone UUID: " \
+                          + zones.get(zone, 'zone_uuid') \
+                          + " Known Device: " + str(device_known) \
+                          + " Device Type: BT " \
+                          + " Device MAC: " + device_mac
+
+            # If we know the name the device advertises itself with, append it to the log message. This may end up as
+            # [unknown] in some cases with ubertooth due to how those results are reported in. That's normal.
+            if device_advertised_name:
+                log_message += " Device Advertised Name: " + device_advertised_name
+
+            # If the device had a user assigned nickname, append it to the log message.
+            if device_nickname:
+                log_message += " Device Nickname: " + device_nickname
+
+            # Log the device event, regardless of alert settings.
+            logging.info(log_message)
+
+            # If we have an alert message defined, meaning zone settings require sending an alert.
             if alert_message:
-                print(alert_message, flush=True)
                 await send_alert(zone, alert_message)
 
     else:
         # Ignore device event since zone doesn't care about BT devices
-        print("Ignoring device event due to zone settings.", flush=True)
+        logging.debug("Ignoring device event due to zone settings.")
 
 
 # Handle incoming connections and process received messages.
@@ -175,7 +194,7 @@ async def handle_connection(reader, writer):
             break
         message = message.decode()
         await process_message(json.loads(message))
-        print(message, flush=True)  # Replace this with a function call to dispatch messages to the notification server.
+        logging.debug(message)
     writer.close()
 
 
@@ -206,7 +225,6 @@ try:
 except KeyboardInterrupt:
     pass
 finally:
-    print("Shutting Down...")
     unix_socket_task.cancel()
     event_loop.stop()
     event_loop.run_until_complete(event_loop.shutdown_asyncgens())

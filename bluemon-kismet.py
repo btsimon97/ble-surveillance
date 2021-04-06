@@ -22,8 +22,8 @@ parser.add_argument("-z", "--zone-file", type=str,
                     default="/etc/bluemon/zones.conf")
 parser.add_argument("-ll", "--log-level", type=str,
                     help="Specify the logging level for the program. Defaults to INFO level. "
-                         "See here for other logging levels: https://docs.python.org/3/library/logging.html#logging-levels",
-                    default="INFO")
+                         "Valid options are DEBUG, INFO, WARNING, ERROR, and CRITICAL",
+                    default="INFO", choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'])
 parser.add_argument("-lf", "--log-file", type=str,
                    help="Specify the logging file to use. Default is /var/log/bluemon/bluemon-kismet.log",
                     default="/var/log/bluemon/bluemon-kismet.log")
@@ -45,7 +45,8 @@ devices.read(args.device_file)
 
 
 # Setup logging
-#logging.basicConfig()
+logging.basicConfig(filename=args.log_file, level=args.log_level, format='%(asctime)s %(levelname)s:%(message)s')
+
 
 # device status(known or unknown) if messsage recieved from kismet
 async def send_alert(zone, msg):
@@ -120,8 +121,26 @@ async def process_message(message_json):
             alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known BTLE device " + device_nickname \
                             + " (" + device_mac + ")"
 
+        # Build the log message for writing to the logs.
+        log_message = "DEVICE DETECTION: Zone Name: " + zones.get(zone, 'zone_name') + " Zone UUID: " \
+                      + zones.get(zone, 'zone_uuid') \
+                      + " Known Device: " + str(device_known) \
+                      + " Device Type: BTLE " \
+                      + " Device MAC: " + device_mac
+
+        # If the device name isn't the device's mac, indicating we know what its advertised name is.
+        if device_name != device_mac:
+            log_message += " Device Advertised Name: " + device_name
+
+        # If the device had a user assigned nickname, append it to the log message.
+        if device_nickname:
+            log_message += " Device Nickname: " + device_nickname
+
+        # Log the device event, regardless of alert settings.
+        logging.info(log_message)
+
+        # If alert message is defined, indicating we need to send an alert.
         if alert_message:
-            print(alert_message, flush=True)
             await send_alert(zone, alert_message)
 
     elif message_json['NEW_DEVICE']['kismet.device.base.type'] == "BR/EDR" and zones.getboolean(zone, 'monitor_bt_devices'):
@@ -136,12 +155,30 @@ async def process_message(message_json):
             alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known BT device " + device_nickname \
                             + " (" + device_mac + ")"
 
+        # Build the log message for writing to the logs.
+        log_message = "DEVICE DETECTION: Zone Name: " + zones.get(zone, 'zone_name') + " Zone UUID: " \
+                      + zones.get(zone, 'zone_uuid') \
+                      + " Known Device: " + str(device_known) \
+                      + " Device Type: BT " \
+                      + " Device MAC: " + device_mac
+
+        # If the device name isn't the device's mac, indicating we know what its advertised name is.
+        if device_name != device_mac:
+            log_message += " Device Advertised Name: " + device_name
+
+        # If the device had a user assigned nickname, append it to the log message.
+        if device_nickname:
+            log_message += " Device Nickname: " + device_nickname
+
+        # Log the device event, regardless of alert settings.
+        logging.info(log_message)
+
+        # If alert message is defined, indicating we need to send an alert.
         if alert_message:
-            print(alert_message, flush=True)
             await send_alert(zone, alert_message)
     else:
-        # Don't fire notification, but print something saying we got something to ignore.
-        print("Ignoring Device event due to notification settings.", flush=True)
+        # Don't fire notification, but log something saying we got something to ignore.
+        logging.debug("Ignoring Device event due to zone settings.")
 
 
 async def kismet_websocket(configuration):
@@ -164,20 +201,19 @@ async def kismet_websocket(configuration):
         while True:
             try:
                 async with websockets.connect(uri, ssl=ssl_context) as websocket:
-                    print("Successfully connected to Kismet WebSocket.", flush=True)
+                    logging.debug("Successfully connected to Kismet WebSocket.")
                     await websocket.send(subscription_message)  # send the subscribe message to kismet.
                     # Loop forever until the connection is closed.
                     while True:
                         try:
                             kismet_message = await websocket.recv()
                             await process_message(json.loads(kismet_message))
-                            print(kismet_message, flush=True)  # Remove this when we get a production ready version
+                            logging.debug(kismet_message)  # dump received message to log. Useful when debugging issues.
                         except websockets.exceptions.ConnectionClosed:
-                            print("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")
+                            logging.debug("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")
                             break
             except OSError:
-                print("Unable to connect to Kismet WebSocket. Maybe Kismet's not running?", flush=True)
-                print("Retrying in 1 Second...", flush=True)
+                logging.debug("Unable to connect to Kismet WebSocket. Maybe Kismet's not running?")
                 await asyncio.sleep(1)
 
     else:
@@ -188,20 +224,19 @@ async def kismet_websocket(configuration):
         while True:
             try:
                 async with websockets.connect(uri) as websocket:
-                    print("Successfully connected to Kismet WebSocket.", flush=True)
+                    logging.debug("Successfully connected to Kismet WebSocket.")
                     await websocket.send(subscription_message)  # send the subscribe message to kismet.
                     # Loop forever until the connection is closed.
                     while True:
                         try:
                             kismet_message = await websocket.recv()
                             await process_message(json.loads(kismet_message))
-                            print(kismet_message, flush=True)  # Remove this when we get a production ready version.
+                            logging.debug(kismet_message)  # dump received message to log. Useful when debugging issues.
                         except websockets.exceptions.ConnectionClosed:
-                            print("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")
+                            logging.debug("Connection to Kismet WebSocket was closed by Kismet. Will attempt to reconnect.")
                             break
             except OSError:
-                print("Unable to connect to Kismet WebSocket. Maybe Kismet's not running?", flush=True)
-                print("Retrying in 1 Second...", flush=True)
+                logging.debug("Unable to connect to Kismet WebSocket. Maybe Kismet's not running?")
                 await asyncio.sleep(1)
 # End Script Functions Definition
 
@@ -214,7 +249,6 @@ try:
 except KeyboardInterrupt:
     pass
 finally:
-    print("Shutting Down...")
     kismet_websocket_task.cancel()
     event_loop.stop()
     event_loop.run_until_complete(event_loop.shutdown_asyncgens())
