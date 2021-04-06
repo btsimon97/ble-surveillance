@@ -7,6 +7,7 @@
 PROG_USERNAME=bluemon
 PROG_GROUPNAME=bluemon
 PROG_DATA_DIR="/var/lib/bluemon"
+PROG_LOG_DIR="/var/log/bluemon"
 PROG_EXEC_DIR="/opt/bluemon"
 KISMET_APT_PKGS="kismet"
 PIP_APT_PKGNAME="python3-pip"
@@ -174,6 +175,13 @@ if ! ls $PROG_DATA_DIR > /dev/null 2>&1; then
 	chmod -R 750 $PROG_DATA_DIR/kismet-logs
 fi
 
+#Check if log directory exists, create it if not.
+if ! ls $PROG_LOG_DIR > /dev/null 2>&1; then
+  echo "Creating logging directory..."
+  mkdir -p $PROG_LOG_DIR
+ 	chown -R $PROG_USERNAME:$PROG_GROUPNAME $PROG_DATA_DIR
+	chmod -R 750 $PROG_DATA_DIR
+fi
 
 #Deploy the tmpfiles config and reload systemd's config
 cp bluemon.conf.systemd-tmpfiles /lib/tmpfiles.d/bluemon.conf
