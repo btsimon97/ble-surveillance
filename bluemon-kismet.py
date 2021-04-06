@@ -95,7 +95,7 @@ async def process_message(message_json):
     device_name = message_json['NEW_DEVICE']['kismet.device.base.commonname']
     # Determine if device is known or not
     device_known = False
-    device_nickname = "Unknown Device"
+    device_nickname = None
     for section in devices.sections():
         if devices.get(section, 'device_macaddr') == device_name:
             device_known = True
