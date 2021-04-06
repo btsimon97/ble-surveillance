@@ -12,6 +12,11 @@
 [DEFAULT]
 #Specify a default name for a given zone in case it is left unspecified
 zone_name = Default Zone
+
+#Specify a default zone UUID for instances where a UUID is needed but otherwise
+#undefined
+zone_uuid = 0
+
 #Fire an alert when an unknown device is detected
 alert_on_unrecognized = true
 
