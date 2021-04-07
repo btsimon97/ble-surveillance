@@ -86,6 +86,20 @@ async def send_alert(zone, msg):
     writer.write(json.dumps(message).encode())
     writer.close()
 
+async def write_to_unknown(name,mac):
+    configParser = configparser.RawConfigParser()
+    configFilePath = r'unknown.conf'
+    #reads in the current unknown config file
+    configParser.read(configFilePath)
+    #adds a new section for the detected unknown device
+    configParser[name + "." + mac] = {'device_name': name, 'device_macaddr': mac}
+    #removes some sections to ensure that the list is up to date (removes oldest first)
+    while(len(configParser.sections())>5):
+        sectionRemove = configParser.popitem()[0]
+        configParser.remove_section(sectionRemove)
+    #writes back modified config file
+    with open(configFilePath,'w') as configfile:
+         configParser.write(configfile)
 
 # Process Received Message
 async def process_message(message_json):
@@ -142,6 +156,11 @@ async def process_message(message_json):
         # If alert message is defined, indicating we need to send an alert.
         if alert_message:
             await send_alert(zone, alert_message)
+            #if device is unknown, add it to the unknown config file
+            if not device_known and (device_name != device_mac):
+                write_to_unknown(device_name, device_mac)
+            elif not device_known:
+                write_to_unknown("unknown", device_mac)
 
     elif message_json['NEW_DEVICE']['kismet.device.base.type'] == "BR/EDR" and zones.getboolean(zone, 'monitor_bt_devices'):
         if zones.getboolean(zone, 'alert_on_unrecognized') and not device_known:
@@ -176,6 +195,11 @@ async def process_message(message_json):
         # If alert message is defined, indicating we need to send an alert.
         if alert_message:
             await send_alert(zone, alert_message)
+            # if device is unknown, add it to the unknown config file
+            if not device_known and (device_name != device_mac):
+                write_to_unknown(device_name, device_mac)
+            elif not device_known:
+                write_to_unknown("unknown", device_mac)
     else:
         # Don't fire notification, but log something saying we got something to ignore.
         logging.debug("Ignoring Device event due to zone settings.")
