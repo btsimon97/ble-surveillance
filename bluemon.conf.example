@@ -1,37 +1,38 @@
 #This config file governs various settings for how the BLE surveillance program works.
 #The kismet section governs how the program interfaces with Kismet to retrieve data.
 [kismet]
-#Set the hostname/IP of the kismet server. This can be localhost or a remote host.
+#Set the hostname/IP of the kismet server. This can be localhost or a remote
+#host.
 server_name = localhost
-#Set the port number to connect to Kismet on. This is usually 2501 but may be different if Kismet is on a remote host.
+
+#Set the port number to connect to Kismet on. This is usually 2501 but may be
+#different if Kismet is on a remote host.
 server_port = 2501
 
-#Sets whether the connection to the Kismet server should use HTTPS. Kismet's webserver doesn't use HTTPS by default,
-#but if its on a remote system or being proxied through another webserver you might need encryption
+#Sets whether the connection to the Kismet server should use HTTPS. Kismet's
+#webserver doesn't use HTTPS by default, but if its on a remote system or
+#being proxied through another webserver you might need encryption.
 use_tls = false
 
-#Sets the filename and path of the CA certificate or CA certificate bundle we should use when validating HTTPS certs
-#The default is for Fedora/RHEL/CentOS based OSes, check what file/files are appropriate for your system.
+#Sets the filename and path of the CA certificate or CA certificate bundle
+#we should use when validating HTTPS certs.
+#The default is for RHEL based OSes, Other OSes may have a different file.
 #If you are not using HTTPS, this setting is ignored.
 tls_cert_file = /etc/ssl/certs/ca-bundle.crt
 
-#Set the credentials to use to connect to the kismet API. You should have a dedicated API user setup in Kismet
-#for this, rather than using the Kismet administrator user. Your username/password should avoid using special characters.
-username = kismet
-password = kismet
+#Set the API token to use to connect to the kismet API. The installer script
+#should automatically setup the API token for you, but you can also do so
+#manually if needed. See kismet's documentation for generating API tokens if
+#you need to change the API token or generate additional tokens.
+api_token = none
 
-# Remaining Settings are for previous version of program and no longer do anything. They are retained for historical
-# reasons only and will be removed in a future update to this file.
+#The notifications section governs how the program connects to the notification
+#server to send messages when an alertable device event occurs.
+[notifications]
+#Set the hostname/IP of the notification server. This can be localhost or a
+#remote host.
+server_name = localhost
 
-#Sets whether we should try to "auto-detect" what API endpoints are available for Bluetooth device detection on Kismet
-#This should usually be enabled, but if you are having issues you can try disabling this and manually setting the
-#endpoints
-autodetect_device_apis = true
-
-#Set how far in past we should look for active devices when probing the API. This means that devices active SINCE
-#the time value set here will be returned as "active" devices. The default of 60 seconds should be good for most uses.
-active_device_timeout = 60
-
-#Set how often we should probe the Kismet API for devices. 5 seconds should be good for most uses, although users
-#wanting more frequent probes can adjust this downward.
-api_probe_interval = 5
+#Set the port number to connect to the notification server on. This is usually
+#5555 but may be a different port number if running on a remote host.
+server_port = 5555

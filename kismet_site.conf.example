@@ -45,7 +45,7 @@ kis_log_snapshot_timeout=2592000
 ### BEGIN DATASOURCE SETTINGS ###
 
 #Collect data from onboard Bluetooth by default.
-source=hci0:name=linuxbt
+source=hci0:name=linuxbluetooth
 
 #Define the Nordic RF BTLE Sniffer datasource. Disabled by default, check
 #the documentation for instructions on how to setup this datasource.

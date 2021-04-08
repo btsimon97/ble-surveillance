@@ -1,5 +1,0 @@
-name=eventbus_forwarder
-author=Ben Simon
-description=Forward Kismet events to another program using UNIX sockets
-version=2020-09-23.01
-kisexternal=kismet_eventbus_forwarder
