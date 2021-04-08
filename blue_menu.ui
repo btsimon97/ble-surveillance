@@ -284,7 +284,7 @@ QPushButton:hover {
               <item alignment="Qt::AlignHCenter">
                <widget class="QLineEdit" name="zone_edit">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
@@ -413,6 +413,21 @@ QPushButton:hover {
                 </property>
                </widget>
               </item>
+              <item>
+               <widget class="QLineEdit" name="erecipt_edit">
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="placeholderText">
+                 <string>Email Recipients (comma separated)</string>
+                </property>
+               </widget>
+              </item>
               <item alignment="Qt::AlignHCenter">
                <widget class="QCheckBox" name="sms_check">
                 <property name="font">
@@ -428,6 +443,21 @@ QPushButton:hover {
                 </property>
                 <property name="checked">
                  <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="srecipt_edit">
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="placeholderText">
+                 <string>SMS Recipients (comma separated, XXX-XXX-XXXX)</string>
                 </property>
                </widget>
               </item>

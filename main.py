@@ -86,6 +86,12 @@ class MainWindow(QMainWindow):
             self.ui.sms_check.setChecked(False)
         else:
             self.ui.sms_check.setChecked(True)
+        emailList = zoneConfig.get(section, 'email_recipients')
+        smsList = zoneConfig.get(section,'sms_recipients')
+        strippedEmail = ''.join( c for c in emailList if  c not in '[]"' )
+        strippedSms = ''.join( c for c in smsList if  c not in '[]"' )
+        self.ui.erecipt_edit.setText(strippedEmail)
+        self.ui.srecipt_edit.setText(strippedSms)
 
     def loadZones(self):
         self.ui.zones_dropdown.clear()
@@ -177,6 +183,8 @@ class MainWindow(QMainWindow):
         emailNotif = self.ui.email_check.isChecked()
         smsNotif = self.ui.sms_check.isChecked()
         uuid = self.ui.uuid_edit.text()
+        emailRecip = self.ui.erecipt_edit.text().split(',')
+        smsRecip = self.ui.srecipt_edit.text().split(',')
         # write inputs to zone config file
         zoneConfig = configparser.ConfigParser()
         zoneConfig.read('zones.conf.example')
@@ -206,6 +214,8 @@ class MainWindow(QMainWindow):
         if smsNotif:
             channels.append("sms")
         zoneConfig.set(currentZone, 'notification_channels', str(channels).replace("'", "\""))
+        zoneConfig.set(currentZone, 'email_recipients', str(emailRecip).replace("'", "\""))
+        zoneConfig.set(currentZone, 'sms_recipients', str(smsRecip).replace("'", "\""))
         # uuid
         if currentZone != "DEFAULT":
             zoneConfig.set(currentZone, 'zone_uuid', uuid)
