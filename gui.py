@@ -44,7 +44,7 @@ class MainWindow(QMainWindow):
     def indexChanged(self, idx):
         # zone name
         zoneConfig = configparser.ConfigParser()
-        zoneConfig.read('zones.conf.example')
+        zoneConfig.read('/etc/bluemon/zones.conf')
         # zone / config section name
         section = self.ui.zones_dropdown.currentText()
         # can't rename default zone or set uuid
@@ -60,7 +60,7 @@ class MainWindow(QMainWindow):
                 zoneConfig.add_section(section.lower())
                 zoneConfig.set(section, 'zone_name', section.lower())
                 zoneConfig.set(section, 'zone_uuid', 'XXXXXXXX-0000-0000-0000-XXXXXXXXXXXX')
-                with open('zones.conf.example', 'w') as configFile:
+                with open('/etc/bluemon/zones.conf', 'w') as configFile:
                     zoneConfig.write(configFile)
             else:  # display uuid
                 self.ui.uuid_edit.setText(zoneConfig.get(section, 'zone_uuid'))
@@ -96,14 +96,14 @@ class MainWindow(QMainWindow):
     def loadZones(self):
         self.ui.zones_dropdown.clear()
         zoneConfig = configparser.ConfigParser()
-        zoneConfig.read('zones.conf.example')
+        zoneConfig.read('/etc/bluemon/zones.conf')
         self.ui.zones_dropdown.addItem('DEFAULT')
         self.ui.zones_dropdown.addItems(zoneConfig.sections())
         self.indexChanged(0)
 
     def loadSettings(self):
         settingsConfig = configparser.ConfigParser()
-        settingsConfig.read('notifications.conf.example')
+        settingsConfig.read('/etc/bluemon/notifications.conf')
         email = settingsConfig.get('email', 'email_address')
         subject = settingsConfig.get('email', 'email_subject')
         phone = settingsConfig.get('sms', 'sender_phone_number')
@@ -116,7 +116,7 @@ class MainWindow(QMainWindow):
         self.ui.token_edit.setText(token)
         # read config file, add dummy header so configparser works
         config = configparser.ConfigParser()
-        with open("kismet_site.conf.example") as stream:
+        with open("/etc/kismet/kismet_site.conf") as stream:
             config.read_string("[top]\n" + stream.read())
         # max devices
         self.ui.maxdev_spin.setValue(config.getint('top', 'tracker_max_devices'))
@@ -126,7 +126,7 @@ class MainWindow(QMainWindow):
     def displayDetails(self):  # details of select device in list
         self.ui.listWidget_2.clear()
         devices = configparser.ConfigParser()
-        devices.read('devices.conf.example')
+        devices.read('/etc/bluemon/devices.conf')
         section = devices.sections()[self.ui.listWidget_1.currentRow()]
         self.ui.listWidget_2.addItem("Device: " + devices.get(section, 'device_name'))
         self.ui.listWidget_2.addItem("MAC address: " + devices.get(section, 'device_macaddr'))
@@ -134,22 +134,22 @@ class MainWindow(QMainWindow):
     def displayDevices(self):  # get list of devices and display nicknames that can be selected
         self.ui.listWidget_1.clear()
         devices = configparser.ConfigParser()
-        devices.read('devices.conf.example')
+        devices.read('/etc/bluemon/devices.conf')
         for section in devices.sections():
             self.ui.listWidget_1.addItem(devices.get(section, 'device_nickname'))
 
     def unknownDevices(self):  # display unknown devices in list
         self.ui.listWidget_3.clear()
         devices = configparser.ConfigParser()
-        devices.read('unknown.conf.example')
+        devices.read('/etc/bluemon/unknown.conf')
         for section in devices.sections():
             self.ui.listWidget_3.addItem(devices.get(section, 'device_name')+' | '+devices.get(section, 'device_macaddr'))
 
     def makeKnown(self):  # make selected device known and remove from unknown
         devices = configparser.ConfigParser()
-        devices.read('devices.conf.example')
+        devices.read('/etc/bluemon/devices.conf')
         unknown = configparser.ConfigParser()
-        unknown.read('unknown.conf.example')
+        unknown.read('/etc/bluemon/unknown.conf')
         # new nickname
         nickname = self.ui.nickname_edit.text()
         self.ui.nickname_edit.clear()
@@ -165,9 +165,9 @@ class MainWindow(QMainWindow):
             # remove section from unknown
             unknown.remove_section(unknown.sections()[self.ui.listWidget_3.currentRow()])
             # save changes to files
-            with open('devices.conf.example', 'w') as configFile:
+            with open('/etc/bluemon/devices.conf', 'w') as configFile:
                     devices.write(configFile)
-            with open('unknown.conf.example', 'w') as configFile:
+            with open('/etc/bluemon/unknown.conf', 'w') as configFile:
                     unknown.write(configFile)
             # update current unknown device display
             self.unknownDevices()
@@ -187,7 +187,7 @@ class MainWindow(QMainWindow):
         smsRecip = self.ui.srecipt_edit.text().split(',')
         # write inputs to zone config file
         zoneConfig = configparser.ConfigParser()
-        zoneConfig.read('zones.conf.example')
+        zoneConfig.read('/etc/bluemon/zones.conf')
         # section renamed, update name
         if currentZone != oldZone:
             items = zoneConfig.items(oldZone)
@@ -220,12 +220,12 @@ class MainWindow(QMainWindow):
         if currentZone != "DEFAULT":
             zoneConfig.set(currentZone, 'zone_uuid', uuid)
         # save changes
-        with open('zones.conf.example', 'w') as configFile:
+        with open('/etc/bluemon/zones.conf', 'w') as configFile:
             zoneConfig.write(configFile)
 
     def saveSettings(self):
         settingsConfig = configparser.ConfigParser()
-        settingsConfig.read('notifications.conf.example')
+        settingsConfig.read('/etc/bluemon/notifications.conf')
         # inputted preferences to save
         email = self.ui.email_edit.text()
         subject = self.ui.subject_edit.text()
@@ -240,10 +240,10 @@ class MainWindow(QMainWindow):
         settingsConfig.set('sms','twilio_account_sid', sid)
         settingsConfig.set('sms','twilio_auth_token', token)
         settingsConfig.set('sms','sender_phone_number', phone)
-        with open('notifications.conf.example', 'w') as configFile:
+        with open('/etc/bluemon/notifications.conf', 'w') as configFile:
             settingsConfig.write(configFile)
         # read and then write over kismet settings, replacing with new info
-        with open("kismet_site.conf.example", "r+") as stream:
+        with open("/etc/kismet/kismet_site.conf", "r+") as stream:
             kismetConfig = stream.read()
             stream.seek(0)
             # device timeout
@@ -258,7 +258,7 @@ class MainWindow(QMainWindow):
 
     def loadSmtp(self):
         settingsConfig = configparser.ConfigParser()
-        settingsConfig.read('notifications.conf.example')
+        settingsConfig.read('/etc/bluemon/notifications.conf')
         servername = settingsConfig.get('email', 'smtp_servername')
         port = settingsConfig.getint('email', 'smtp_portnumber')
         auth = settingsConfig.getboolean('email', 'smtp_authentication_required')
@@ -277,7 +277,7 @@ class MainWindow(QMainWindow):
 
     def saveSmtp(self):
         settingsConfig = configparser.ConfigParser()
-        settingsConfig.read('notifications.conf.example')
+        settingsConfig.read('/etc/bluemon/notifications.conf')
         servername = self.ui.server_edit.text()
         port = self.ui.port_spin.value()
         method = self.ui.method_dropdown.currentText()
@@ -293,7 +293,7 @@ class MainWindow(QMainWindow):
         settingsConfig.set('email', 'smtp_username', user)
         settingsConfig.set('email', 'smtp_password', passwd)
 
-        with open('notifications.conf.example', 'w') as configFile:
+        with open('/etc/bluemon/notifications.conf', 'w') as configFile:
             settingsConfig.write(configFile)
         
     def onChange(self, index):
