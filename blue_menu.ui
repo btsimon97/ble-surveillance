@@ -134,7 +134,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QPushButton" name="btn_page_1">
+              <widget class="QPushButton" name="zones_tab">
                <property name="minimumSize">
                 <size>
                  <width>0</width>
@@ -157,7 +157,7 @@ QPushButton:hover {
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="btn_page_2">
+              <widget class="QPushButton" name="settings_tab">
                <property name="minimumSize">
                 <size>
                  <width>0</width>
@@ -180,7 +180,7 @@ QPushButton:hover {
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="btn_page_3">
+              <widget class="QPushButton" name="devices_tab">
                <property name="minimumSize">
                 <size>
                  <width>0</width>
@@ -225,7 +225,7 @@ QPushButton:hover {
             <widget class="QWidget" name="page_1">
              <layout class="QVBoxLayout" name="verticalLayout_7">
               <item>
-               <widget class="QLabel" name="label_1">
+               <widget class="QLabel" name="zone_label">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
@@ -252,7 +252,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QComboBox" name="comboBox">
+               <widget class="QComboBox" name="zones_dropdown">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -282,7 +282,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QLineEdit" name="lineEdit_1">
+               <widget class="QLineEdit" name="zone_edit">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -306,7 +306,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QCheckBox" name="checkBox_1">
+               <widget class="QCheckBox" name="known_check">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -333,7 +333,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QCheckBox" name="checkBox_2">
+               <widget class="QCheckBox" name="unknown_check">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -360,7 +360,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QCheckBox" name="checkBox_3">
+               <widget class="QCheckBox" name="ble_check">
                 <property name="font">
                  <font>
                   <pointsize>12</pointsize>
@@ -378,7 +378,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QCheckBox" name="checkBox_4">
+               <widget class="QCheckBox" name="bl_check">
                 <property name="font">
                  <font>
                   <pointsize>12</pointsize>
@@ -396,7 +396,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QCheckBox" name="checkBox_5">
+               <widget class="QCheckBox" name="email_check">
                 <property name="font">
                  <font>
                   <pointsize>12</pointsize>
@@ -414,7 +414,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QCheckBox" name="checkBox_6">
+               <widget class="QCheckBox" name="sms_check">
                 <property name="font">
                  <font>
                   <pointsize>12</pointsize>
@@ -432,7 +432,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QLineEdit" name="lineEdit_4">
+               <widget class="QLineEdit" name="uuid_edit">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -497,7 +497,7 @@ QPushButton:hover {
             <widget class="QWidget" name="page_2">
              <layout class="QVBoxLayout" name="verticalLayout_6">
               <item alignment="Qt::AlignHCenter">
-               <widget class="QLabel" name="label_2">
+               <widget class="QLabel" name="settings_label">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -521,7 +521,35 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QLineEdit" name="lineEdit_2">
+               <widget class="QPushButton" name="smtp_btn">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+	color: rgb(255, 255, 255);
+	background-color: rgb(35, 35, 35);
+	border: 0px solid;
+}
+QPushButton:hover {
+	background-color: rgb(85, 170, 255);
+}</string>
+                </property>
+                <property name="text">
+                 <string>SMTP Settings</string>
+                </property>
+               </widget>
+              </item>
+              <item alignment="Qt::AlignHCenter">
+               <widget class="QLineEdit" name="email_edit">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -542,7 +570,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QLineEdit" name="lineEdit_3">
+               <widget class="QLineEdit" name="subject_edit">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -558,12 +586,90 @@ QPushButton:hover {
                  <string notr="true">color: #FFF;</string>
                 </property>
                 <property name="placeholderText">
-                 <string>Phone Number</string>
+                 <string>Email Subject Line</string>
                 </property>
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QSpinBox" name="spinBox_1">
+               <widget class="QLineEdit" name="phone_edit">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="inputMask">
+                 <string/>
+                </property>
+                <property name="text">
+                 <string extracomment="XXX-XXX-XXXX"/>
+                </property>
+                <property name="frame">
+                 <bool>true</bool>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                </property>
+                <property name="placeholderText">
+                 <string>Phone Number X-X-X</string>
+                </property>
+               </widget>
+              </item>
+              <item alignment="Qt::AlignHCenter">
+               <widget class="QLineEdit" name="sid_edit">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="placeholderText">
+                 <string>Twilio Account SID</string>
+                </property>
+               </widget>
+              </item>
+              <item alignment="Qt::AlignHCenter">
+               <widget class="QLineEdit" name="token_edit">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="placeholderText">
+                 <string>Twilio Auth Token</string>
+                </property>
+               </widget>
+              </item>
+              <item alignment="Qt::AlignHCenter">
+               <widget class="QSpinBox" name="maxdev_spin">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -605,7 +711,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item alignment="Qt::AlignHCenter">
-               <widget class="QSpinBox" name="spinBox_2">
+               <widget class="QSpinBox" name="timeout_spin">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -664,7 +770,7 @@ QPushButton:hover {
             <widget class="QWidget" name="page_3">
              <layout class="QVBoxLayout" name="verticalLayout_8">
               <item>
-               <widget class="QLabel" name="label_3">
+               <widget class="QLabel" name="known_label">
                 <property name="font">
                  <font>
                   <pointsize>28</pointsize>
@@ -730,7 +836,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_2">
+               <widget class="QPushButton" name="unknown_dev">
                 <property name="font">
                  <font>
                   <pointsize>12</pointsize>
@@ -756,7 +862,7 @@ QPushButton:hover {
             <widget class="QWidget" name="page_4">
              <layout class="QVBoxLayout" name="verticalLayout_2">
               <item>
-               <widget class="QLabel" name="label_4">
+               <widget class="QLabel" name="unknown_label">
                 <property name="font">
                  <font>
                   <pointsize>28</pointsize>
@@ -786,7 +892,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="lineEdit_5">
+               <widget class="QLineEdit" name="nickname_edit">
                 <property name="font">
                  <font>
                   <pointsize>12</pointsize>
@@ -801,7 +907,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_3">
+               <widget class="QPushButton" name="make_known">
                 <property name="font">
                  <font>
                   <pointsize>12</pointsize>
@@ -823,7 +929,7 @@ QPushButton:hover {
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_4">
+               <widget class="QPushButton" name="known_dev">
                 <property name="font">
                  <font>
                   <pointsize>12</pointsize>
@@ -841,6 +947,213 @@ QPushButton:hover {
                 </property>
                 <property name="text">
                  <string>See Known Devices</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="page_5">
+             <layout class="QVBoxLayout" name="verticalLayout_10">
+              <item alignment="Qt::AlignHCenter">
+               <widget class="QLabel" name="smtp_label">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>28</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="text">
+                 <string>SMTP Settings</string>
+                </property>
+               </widget>
+              </item>
+              <item alignment="Qt::AlignHCenter">
+               <widget class="QLineEdit" name="server_edit">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="placeholderText">
+                 <string>SMTP Servername</string>
+                </property>
+               </widget>
+              </item>
+              <item alignment="Qt::AlignHCenter">
+               <widget class="QSpinBox" name="port_spin">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="prefix">
+                 <string>SMTP Port #: </string>
+                </property>
+                <property name="maximum">
+                 <number>65536</number>
+                </property>
+                <property name="singleStep">
+                 <number>0</number>
+                </property>
+                <property name="value">
+                 <number>25</number>
+                </property>
+               </widget>
+              </item>
+              <item alignment="Qt::AlignHCenter">
+               <widget class="QComboBox" name="method_dropdown">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="placeholderText">
+                 <string>SMTP Connection Method</string>
+                </property>
+               </widget>
+              </item>
+              <item alignment="Qt::AlignHCenter">
+               <widget class="QCheckBox" name="auth_check">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="text">
+                 <string>SMTP Auth Required</string>
+                </property>
+               </widget>
+              </item>
+              <item alignment="Qt::AlignHCenter">
+               <widget class="QLineEdit" name="username_edit">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="placeholderText">
+                 <string>SMTP Username</string>
+                </property>
+               </widget>
+              </item>
+              <item alignment="Qt::AlignHCenter">
+               <widget class="QLineEdit" name="pass_edit">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: #FFF;</string>
+                </property>
+                <property name="echoMode">
+                 <enum>QLineEdit::Password</enum>
+                </property>
+                <property name="placeholderText">
+                 <string>SMTP Password</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="settings_btn">
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+	color: rgb(255, 255, 255);
+	background-color: rgb(35, 35, 35);
+	border: 0px solid;
+}
+QPushButton:hover {
+	background-color: rgb(85, 170, 255);
+}</string>
+                </property>
+                <property name="text">
+                 <string>Go Back to Settings</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="save_3">
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+	color: rgb(255, 255, 255);
+	background-color: rgb(35, 35, 35);
+	border: 0px solid;
+}
+QPushButton:hover {
+	background-color: rgb(85, 170, 255);
+}</string>
+                </property>
+                <property name="text">
+                 <string>Save</string>
                 </property>
                </widget>
               </item>
