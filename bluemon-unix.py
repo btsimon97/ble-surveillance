@@ -60,7 +60,7 @@ LISTEN_PID = os.environ.get("LISTEN_PID", None) or os.getpid()
 
 # sends the appropriate message based on zone settings
 async def send_alert(zone, msg):
-    notification_channels = [channel.strip() for channel in 
+    notification_channels = [channel.lower().strip() for channel in
                              zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")]
 
     # Format message into notification server JSON
@@ -103,7 +103,7 @@ async def process_message(message_json):
     detected_by_uuid = message_json['ubertooth_serial_number']
     for section in zones.sections():
         if section != 'DEFAULT':
-            if detected_by_uuid == zones.get(section, 'zone_uuid'):
+            if detected_by_uuid.upper() == zones.get(section, 'zone_uuid').upper():
                 zone = section
     if zones.getboolean(zone, 'monitor_bt_devices'):
         #  Compile a regex to identify results with an unknown UAP
@@ -125,7 +125,7 @@ async def process_message(message_json):
                 lap = lap_regex.search(device['mac'])[0]  # extract LAP from device mac string
                 for section in devices.sections():  # see if the device's LAP matches a known LAP
                     current_mac = devices.get(section, 'device_macaddr')
-                    if lap in current_mac:
+                    if lap.upper() in current_mac.upper():
                         device_known = True
                         device_nickname = devices.get(section, 'device_nickname')
                         device_mac = current_mac
@@ -136,7 +136,7 @@ async def process_message(message_json):
                 uap_and_lap = uap_and_lap_regex.search(device['mac'])[0]
                 for section in devices.sections():  # see if UAP and LAP matches known UAP and LAP
                     current_mac = devices.get(section, 'device_macaddr')
-                    if uap_and_lap in current_mac:
+                    if uap_and_lap.upper() in current_mac.upper():
                         device_known = True
                         device_nickname = devices.get(section, 'device_nickname')
                         device_mac = current_mac
