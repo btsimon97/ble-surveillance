@@ -118,7 +118,7 @@ async def process_message(message_json):
             else:
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown BTLE device with Name: " \
                                 + device_name + " and MAC: " + device_mac
-        elif zones.getboolean(zone, 'alert_on_recognized'):
+        elif zones.getboolean(zone, 'alert_on_recognized') and device_known:
             alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known BTLE device " + device_nickname \
                             + " (" + device_mac + ")"
 
@@ -152,7 +152,7 @@ async def process_message(message_json):
             else:
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown BT device with Name: " \
                                 + device_name + " and MAC: " + device_mac
-        elif zones.getboolean(zone, 'alert_on_recognized'):
+        elif zones.getboolean(zone, 'alert_on_recognized') and device_known:
             alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known BT device " + device_nickname \
                             + " (" + device_mac + ")"
 
