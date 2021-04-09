@@ -148,7 +148,7 @@ async def process_message(message_json):
             alert_message = None
             if device_known and zones.getboolean(zone, 'alert_on_recognized'):
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known device " + device_nickname \
-                                + " (" + device_mac + ")"
+                                + " (" + device_mac.upper() + ")"
 
             elif device_advertised_name and (device_advertised_name != device_mac) and zones.getboolean(zone, 'alert_on_unrecognized'):
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown device with Name: " \
