@@ -199,10 +199,14 @@ fi
 cp bluemon-kismet.py $PROG_EXEC_DIR/bluemon-kismet.py
 cp bluemon-unix.py $PROG_EXEC_DIR/bluemon-unix.py
 cp bluemon-ubertooth-scan.sh $PROG_EXEC_DIR/bluemon-ubertooth-scan
+cp run_gui.sh $PROG_EXEC_DIR/run_gui
+cp -r gui $PROG_EXEC_DIR
 cp -r notifications $PROG_EXEC_DIR
 chmod +x $PROG_EXEC_DIR/bluemon-kismet.py
 chmod +x $PROG_EXEC_DIR/bluemon-unix.py
 chmod +x $PROG_EXEC_DIR/bluemon-ubertooth-scan
+chmod +x $PROG_EXEC_DIR/run_gui
+chmod +x $PROG_EXEC_DIR/gui/gui.py
 chmod +x $PROG_EXEC_DIR/notifications/notifications.py
 
 #Install the systemd services
@@ -251,6 +255,10 @@ cp /etc/bluemon/bluemon.conf.example /etc/bluemon/bluemon.conf
 cp /etc/bluemon/zones.conf.example /etc/bluemon/zones.conf
 cp /etc/bluemon/devices.conf.example /etc/bluemon/devices.conf
 cp /etc/bluemon/notifications.conf.example /etc/bluemon/notifications.conf
+
+#Create the unknown device config file for the GUI
+touch /etc/bluemon/unknown.conf
+chown $PROG_USERNAME:$PROG_GROUPNAME /etc/bluemon/unknown.conf
 
 #set the API token in Bluemon's config.
 sed -i "s/api_token = none/api_token=$API_TOKEN/" /etc/bluemon/bluemon.conf
