@@ -184,7 +184,7 @@ if ! ls $PROG_LOG_DIR > /dev/null 2>&1; then
 fi
 
 #Deploy the tmpfiles config and reload systemd's config
-cp bluemon.conf.systemd-tmpfiles /lib/tmpfiles.d/bluemon.conf
+cp conf/systemd/bluemon.conf.systemd-tmpfiles /lib/tmpfiles.d/bluemon.conf
 systemd-tmpfiles --create --remove --boot
 
 #Check if directory where bluemon executables stored exists, create if not
@@ -210,26 +210,26 @@ chmod +x $PROG_EXEC_DIR/gui/gui.py
 chmod +x $PROG_EXEC_DIR/notifications/notifications.py
 
 #Install the systemd services
-cp bluemon-kismet.service /etc/systemd/system/
-cp bluemon-unix.service /etc/systemd/system/
-cp bluemon-unix.socket /etc/systemd/system
-cp bluemon-notify.service /etc/systemd/system
-#cp bluemon-notify.socket /etc/systemd/system
+cp conf/systemd/bluemon-kismet.service /etc/systemd/system/
+cp conf/systemd/bluemon-unix.service /etc/systemd/system/
+cp conf/systemd/bluemon-unix.socket /etc/systemd/system
+cp conf/systemd/bluemon-notify.service /etc/systemd/system
+#cp conf/systemd/bluemon-notify.socket /etc/systemd/system
 systemctl daemon-reload
 
 #Create the config directory and copy the sample configs
 mkdir /etc/bluemon
 chown $PROG_USERNAME:$PROG_GROUPNAME /etc/bluemon
 chmod 550 /etc/bluemon
-cp bluemon.conf.example /etc/bluemon
-cp zones.conf.example /etc/bluemon
-cp devices.conf.example /etc/bluemon
-cp notifications.conf.example /etc/bluemon
+cp conf/bluemon.conf.example /etc/bluemon
+cp conf/zones.conf.example /etc/bluemon
+cp conf/devices.conf.example /etc/bluemon
+cp conf/notifications.conf.example /etc/bluemon
 
 #Configure Kismet Service
 sed -i "s/root/$PROG_USERNAME/" /usr/lib/systemd/system/kismet.service
-cp kismet_site.conf.example /etc/kismet/kismet_site.conf
-cp kismet_site.conf.example /etc/kismet
+cp conf/kismet_site.conf.example /etc/kismet/kismet_site.conf
+cp conf/kismet_site.conf.example /etc/kismet
 systemctl enable kismet
 systemctl start kismet
 echo "Waiting for kismet startup to complete..."
@@ -259,6 +259,7 @@ cp /etc/bluemon/notifications.conf.example /etc/bluemon/notifications.conf
 #Create the unknown device config file for the GUI
 touch /etc/bluemon/unknown.conf
 chown $PROG_USERNAME:$PROG_GROUPNAME /etc/bluemon/unknown.conf
+chmod 660 /etc/bluemon/unknown.conf
 
 #set the API token in Bluemon's config.
 sed -i "s/api_token = none/api_token=$API_TOKEN/" /etc/bluemon/bluemon.conf
