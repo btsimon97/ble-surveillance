@@ -179,8 +179,8 @@ fi
 if ! ls $PROG_LOG_DIR > /dev/null 2>&1; then
   echo "Creating logging directory..."
   mkdir -p $PROG_LOG_DIR
- 	chown -R $PROG_USERNAME:$PROG_GROUPNAME $PROG_DATA_DIR
-	chmod -R 750 $PROG_DATA_DIR
+  chown -R $PROG_USERNAME:$PROG_GROUPNAME $PROG_LOG_DIR
+  chmod -R 750 $PROG_LOG_DIR
 fi
 
 #Deploy the tmpfiles config and reload systemd's config
