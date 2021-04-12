@@ -208,6 +208,7 @@ class MainWindow(QMainWindow):
         zoneConfig.read(args.zone_file)
         # section renamed, update name
         if currentZone != oldZone:
+            self.ui.zone_edit.setPlaceholderText(currentZone)
             items = zoneConfig.items(oldZone)
             zoneConfig.add_section(currentZone)
             for item in items:
