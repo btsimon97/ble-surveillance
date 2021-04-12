@@ -117,6 +117,9 @@ class MainWindow(QMainWindow):
         self.ui.zones_dropdown.clear()
         zoneConfig = configparser.ConfigParser()
         zoneConfig.read(args.zone_file)
+        if len(zoneConfig.sections()) == 0:
+            print('Insufficient permissions, please run as sudo/root or add to bluemon using "adduser my_username bluemon"')
+            exit()
         self.ui.zones_dropdown.addItem('DEFAULT')
         self.ui.zones_dropdown.addItems(zoneConfig.sections())
         self.indexChanged(0)
