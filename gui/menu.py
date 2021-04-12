@@ -104,6 +104,11 @@ class Ui_MainWindow(object):
         self.stackedWidget = QtWidgets.QStackedWidget(self.frame_pages)
         self.stackedWidget.setObjectName("stackedWidget")
         self.page_1 = QtWidgets.QWidget()
+        self.page_1.setStyleSheet("QToolTip { \n"
+"                           background-color: white; \n"
+"                           color: black; \n"
+"                           border: black solid 1px\n"
+"                           }")
         self.page_1.setObjectName("page_1")
         self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.page_1)
         self.verticalLayout_7.setObjectName("verticalLayout_7")

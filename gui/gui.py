@@ -77,8 +77,8 @@ class MainWindow(QMainWindow):
             self.ui.uuid_edit.setEnabled(True)
             # create new section if user just added a zone
             if not zoneConfig.has_section(section):
-                zoneConfig.add_section(section.lower())
-                zoneConfig.set(section, 'zone_name', section.lower())
+                zoneConfig.add_section(section)
+                zoneConfig.set(section, 'zone_name', section)
                 zoneConfig.set(section, 'zone_uuid', 'XXXXXXXX-0000-0000-0000-XXXXXXXXXXXX')
                 with open(args.zone_file, 'w') as configFile:
                     zoneConfig.write(configFile)
@@ -180,7 +180,7 @@ class MainWindow(QMainWindow):
             unknownSection = unknown.sections()[self.ui.listWidget_3.currentRow()]
             # update known device file to include unknown device
             devices.add_section(nickname)
-            devices.set(nickname, 'device_nickname', nickname.lower())
+            devices.set(nickname, 'device_nickname', nickname)
             devices.set(nickname, 'device_name', unknown.get(unknownSection, 'device_name'))
             devices.set(nickname, 'device_macaddr', unknown.get(unknownSection, 'device_macaddr'))
             # remove section from unknown
@@ -216,7 +216,7 @@ class MainWindow(QMainWindow):
             zoneConfig.add_section(currentZone)
             for item in items:
                 zoneConfig.set(currentZone, item[0], item[1])
-            zoneConfig.set(currentZone,'zone_name',currentZone.lower())
+            zoneConfig.set(currentZone,'zone_name',currentZone)
             zoneConfig.remove_section(oldZone)
             self.ui.zones_dropdown.setItemText(self.ui.zones_dropdown.currentIndex(),currentZone)
         # alert known device
