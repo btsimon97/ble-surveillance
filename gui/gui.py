@@ -108,8 +108,8 @@ class MainWindow(QMainWindow):
             self.ui.sms_check.setChecked(True)
         emailList = zoneConfig.get(section, 'email_recipients')
         smsList = zoneConfig.get(section,'sms_recipients')
-        strippedEmail = ''.join( c for c in emailList if  c not in '[]"' )
-        strippedSms = ''.join( c for c in smsList if  c not in '[]"' )
+        strippedEmail = ''.join( c for c in emailList if  c not in '[]" ')
+        strippedSms = ''.join( c for c in smsList if  c not in '[]" ')
         self.ui.erecipt_edit.setText(strippedEmail)
         self.ui.srecipt_edit.setText(strippedSms)
 
@@ -213,7 +213,9 @@ class MainWindow(QMainWindow):
             zoneConfig.add_section(currentZone)
             for item in items:
                 zoneConfig.set(currentZone, item[0], item[1])
+            zoneConfig.set(currentZone,'zone_name',currentZone.lower())
             zoneConfig.remove_section(oldZone)
+            self.ui.zones_dropdown.setItemText(self.ui.zones_dropdown.currentIndex(),currentZone)
         # alert known device
         if zoneConfig.getboolean("DEFAULT", 'alert_on_recognized') != alertKnown:
             zoneConfig.set(currentZone, 'alert_on_recognized', str(alertKnown).lower())
