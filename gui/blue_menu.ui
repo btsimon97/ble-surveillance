@@ -223,6 +223,9 @@ QPushButton:hover {
              <number>0</number>
             </property>
             <widget class="QWidget" name="page_1">
+             <property name="toolTip">
+              <string>To add zones type zone name into dropdown and press enter.</string>
+             </property>
              <layout class="QVBoxLayout" name="verticalLayout_7">
               <item>
                <widget class="QLabel" name="zone_label">
@@ -263,6 +266,9 @@ QPushButton:hover {
                  <font>
                   <pointsize>12</pointsize>
                  </font>
+                </property>
+                <property name="toolTip">
+                 <string/>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">color: #FFF;</string>
