@@ -915,7 +915,7 @@ QPushButton:hover {
                  <string notr="true">color: #FFF;</string>
                 </property>
                 <property name="text">
-                 <string>Unkown Devices</string>
+                 <string>Unknown Devices</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignHCenter|Qt::AlignTop</set>

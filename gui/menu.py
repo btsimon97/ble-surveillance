@@ -685,7 +685,7 @@ class Ui_MainWindow(object):
         self.save_2.setText(_translate("MainWindow", "Save"))
         self.known_label.setText(_translate("MainWindow", "Known Devices"))
         self.unknown_dev.setText(_translate("MainWindow", "See Unknown Devices"))
-        self.unknown_label.setText(_translate("MainWindow", "Unkown Devices"))
+        self.unknown_label.setText(_translate("MainWindow", "Unknown Devices"))
         self.nickname_edit.setPlaceholderText(_translate("MainWindow", "Device Nickname"))
         self.make_known.setText(_translate("MainWindow", "Make Device Known"))
         self.known_dev.setText(_translate("MainWindow", "See Known Devices"))
