@@ -27,9 +27,9 @@ parser.add_argument("-ll", "--log-level", type=str,
 parser.add_argument("-lf", "--log-file", type=str,
                    help="Specify the logging file to use. Default is /var/log/bluemon/bluemon-kismet.log",
                     default="/var/log/bluemon/bluemon-unix.log")
-parser.add_argument("-ud","--unknown-device-file", type=str,
+parser.add_argument("-uud","--unknown-ubertooth-device-file", type=str,
                     help="Specify the file with the list of unknown devices to diplay in GUI. Default is /etc/bluemon/unknown.conf",
-                    default="/etc/bluemon/unknown.conf")
+                    default="/etc/bluemon/unknown_ubertooth.conf")
 args = parser.parse_args()
 
 # Begin Script Constants Definition
@@ -104,7 +104,7 @@ async def send_alert(zone, msg):
 
 async def write_to_unknown(name,mac):
     #reads in the current unknown config file
-    unknown_devices.read(args.unknown_device_file)
+    unknown_devices.read(args.unknown_ubertooth_device_file)
     #adds a new section for the detected unknown device
     unknown_devices[name + "." + mac] = {'device_name': name, 'device_macaddr': mac}
     #removes some sections to ensure that the list is up to date (removes oldest first)
@@ -112,7 +112,7 @@ async def write_to_unknown(name,mac):
         sectionRemove = unknown_devices.popitem()[0]
         unknown_devices.remove_section(sectionRemove)
     #writes back modified config file
-    with open(args.unknown_device_file,'w') as configfile:
+    with open(args.unknown_ubertooth_device_file,'w') as configfile:
          unknown_devices.write(configfile)
 
 # Process Received Message
