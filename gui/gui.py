@@ -18,9 +18,12 @@ parser.add_argument("-n", "--notification-file", type=str,
 parser.add_argument("-d", "--device-file", type=str,
                     help="Specify the file with the list of known devices to use. Default is /etc/bluemon/devices.conf",
                     default="/etc/bluemon/devices.conf")
-parser.add_argument("-u", "--unknown-file", type=str,
-                    help="Specify the file with the list of unknown devices to use. Default is /etc/bluemon/unknown.conf",
-                    default="/etc/bluemon/unknown.conf")
+parser.add_argument("-u", "--ubertooth-unknown", type=str,
+                    help="Specify the file with the list of Ubertooth unknown devices to use. Default is /etc/bluemon/unknown_ubertooth.conf",
+                    default="/etc/bluemon/unknown_ubertooth.conf")
+parser.add_argument("-k", "--kismet-unknown", type=str,
+                    help="Specify the file with the list of Kismet unknown devices to use. Default is /etc/bluemon/unknown_kismet.conf",
+                    default="/etc/bluemon/unknown_kismet.conf")
 parser.add_argument("-z", "--zone-file", type=str,
                     help="Specify the file with the list of zones to use. Default is /etc/bluemon/zones.conf",
                     default="/etc/bluemon/zones.conf")
@@ -161,35 +164,54 @@ class MainWindow(QMainWindow):
 
     def unknownDevices(self):  # display unknown devices in list
         self.ui.listWidget_3.clear()
-        devices = configparser.ConfigParser()
-        devices.read(args.unknown_file)
-        for section in devices.sections():
-            self.ui.listWidget_3.addItem(devices.get(section, 'device_name')+' | '+devices.get(section, 'device_macaddr'))
+        kismet = configparser.ConfigParser()
+        kismet.read(args.kismet_unknown)
+        for section in kismet.sections():
+            self.ui.listWidget_3.addItem(section)
+        uber = configparser.ConfigParser()
+        uber.read(args.ubertooth_unknown)
+        for section in uber.sections():
+            self.ui.listWidget_3.addItem(section)
 
     def makeKnown(self):  # make selected device known and remove from unknown
         devices = configparser.ConfigParser()
         devices.read(args.device_file)
-        unknown = configparser.ConfigParser()
-        unknown.read(args.unknown_file)
+        #unknown = configparser.ConfigParser()
+        #unknown.read(args.unknown_file)
+        kismet = configparser.ConfigParser()
+        kismet.read(args.kismet_unknown)
+        uber = configparser.ConfigParser()
+        uber.read(args.ubertooth_unknown)
         # new nickname
         nickname = self.ui.nickname_edit.text()
         self.ui.nickname_edit.clear()
+        # current selected section
+        section = self.ui.listWidget_3.currentItem().text()
         # if device selected and nickname specified
         if(nickname and self.ui.listWidget_3.currentItem()):
-            # selected section
-            unknownSection = unknown.sections()[self.ui.listWidget_3.currentRow()]
-            # update known device file to include unknown device
-            devices.add_section(nickname)
-            devices.set(nickname, 'device_nickname', nickname)
-            devices.set(nickname, 'device_name', unknown.get(unknownSection, 'device_name'))
-            devices.set(nickname, 'device_macaddr', unknown.get(unknownSection, 'device_macaddr'))
-            # remove section from unknown
-            unknown.remove_section(unknown.sections()[self.ui.listWidget_3.currentRow()])
+            if kismet.has_section(section):
+                # update known device file to include unknown device
+                devices.add_section(nickname)
+                devices.set(nickname, 'device_nickname', nickname)
+                devices.set(nickname, 'device_name', kismet.get(section, 'device_name'))
+                devices.set(nickname, 'device_macaddr', kismet.get(section, 'device_macaddr'))
+                # remove section from unknown
+                kismet.remove_section(kismet.sections()[self.ui.listWidget_3.currentRow()])
+                with open(args.kismet_unknown, 'w') as configFile:
+                        kismet.write(configFile)
+            else:
+                # update known device file to include unknown device
+                devices.add_section(nickname)
+                devices.set(nickname, 'device_nickname', nickname)
+                devices.set(nickname, 'device_name', uber.get(section, 'device_name'))
+                devices.set(nickname, 'device_macaddr', uber.get(section, 'device_macaddr'))
+                # remove section from unknown
+                uber.remove_section(section)
+                with open(args.ubertooth_unknown, 'w') as configFile:
+                        uber.write(configFile)
             # save changes to files
             with open(args.device_file, 'w') as configFile:
                     devices.write(configFile)
-            with open(args.unknown_file, 'w') as configFile:
-                    unknown.write(configFile)
             # update current unknown device display
             self.unknownDevices()
 
