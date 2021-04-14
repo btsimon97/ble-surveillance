@@ -30,6 +30,7 @@ parser.add_argument("-z", "--zone-file", type=str,
 args = parser.parse_args()
 SITE_PATH = "/etc/kismet/kismet_site.conf"
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
@@ -109,10 +110,13 @@ class MainWindow(QMainWindow):
             self.ui.sms_check.setChecked(False)
         else:
             self.ui.sms_check.setChecked(True)
+        # get email / sms list
         emailList = zoneConfig.get(section, 'email_recipients')
-        smsList = zoneConfig.get(section,'sms_recipients')
-        strippedEmail = ''.join( c for c in emailList if  c not in '[]" ')
-        strippedSms = ''.join( c for c in smsList if  c not in '[]" ')
+        smsList = zoneConfig.get(section, 'sms_recipients')
+        # strip email / sms
+        strippedEmail = ''.join(c for c in emailList if c not in '[]" ')
+        strippedSms = ''.join(c for c in smsList if c not in '[]" ')
+        # load stripped email / sms into widgets
         self.ui.erecipt_edit.setText(strippedEmail)
         self.ui.srecipt_edit.setText(strippedSms)
 
@@ -120,21 +124,26 @@ class MainWindow(QMainWindow):
         self.ui.zones_dropdown.clear()
         zoneConfig = configparser.ConfigParser()
         zoneConfig.read(args.zone_file)
+        # if cannot read the zone config file
         if len(zoneConfig.sections()) == 0:
             print('Insufficient permissions, please run as sudo/root or add to bluemon using "adduser my_username bluemon"')
             exit()
+        # list current zones in dropdown
         self.ui.zones_dropdown.addItem('DEFAULT')
         self.ui.zones_dropdown.addItems(zoneConfig.sections())
+        # load first zone
         self.indexChanged(0)
 
     def loadSettings(self):
         settingsConfig = configparser.ConfigParser()
         settingsConfig.read(args.notification_file)
+        # get current settings in file
         email = settingsConfig.get('email', 'email_address')
         subject = settingsConfig.get('email', 'email_subject')
         phone = settingsConfig.get('sms', 'sender_phone_number')
         sid = settingsConfig.get('sms', 'twilio_account_sid')
         token = settingsConfig.get('sms', 'twilio_auth_token')
+        # update widgets to current settings
         self.ui.email_edit.setText(email)
         self.ui.subject_edit.setText(subject)
         self.ui.phone_edit.setText(phone)
@@ -152,6 +161,7 @@ class MainWindow(QMainWindow):
         devices = configparser.ConfigParser()
         devices.read(args.device_file)
         section = devices.sections()[self.ui.listWidget_1.currentRow()]
+        # show current selected items details
         self.ui.listWidget_2.addItem("Device: " + devices.get(section, 'device_name'))
         self.ui.listWidget_2.addItem("MAC address: " + devices.get(section, 'device_macaddr'))
 
@@ -159,6 +169,7 @@ class MainWindow(QMainWindow):
         self.ui.listWidget_1.clear()
         devices = configparser.ConfigParser()
         devices.read(args.device_file)
+        # display current known devices
         for section in devices.sections():
             self.ui.listWidget_1.addItem(devices.get(section, 'device_nickname'))
 
@@ -166,18 +177,18 @@ class MainWindow(QMainWindow):
         self.ui.listWidget_3.clear()
         kismet = configparser.ConfigParser()
         kismet.read(args.kismet_unknown)
+        # display kismet unknown devices
         for section in kismet.sections():
             self.ui.listWidget_3.addItem(section)
         uber = configparser.ConfigParser()
         uber.read(args.ubertooth_unknown)
+        # display ubertooth unknown devices
         for section in uber.sections():
             self.ui.listWidget_3.addItem(section)
 
     def makeKnown(self):  # make selected device known and remove from unknown
         devices = configparser.ConfigParser()
         devices.read(args.device_file)
-        #unknown = configparser.ConfigParser()
-        #unknown.read(args.unknown_file)
         kismet = configparser.ConfigParser()
         kismet.read(args.kismet_unknown)
         uber = configparser.ConfigParser()
@@ -196,7 +207,7 @@ class MainWindow(QMainWindow):
                 devices.set(nickname, 'device_name', kismet.get(section, 'device_name'))
                 devices.set(nickname, 'device_macaddr', kismet.get(section, 'device_macaddr'))
                 # remove section from unknown
-                kismet.remove_section(kismet.sections()[self.ui.listWidget_3.currentRow()])
+                kismet.remove_section(section)
                 with open(args.kismet_unknown, 'w') as configFile:
                         kismet.write(configFile)
             else:
@@ -238,9 +249,9 @@ class MainWindow(QMainWindow):
             zoneConfig.add_section(currentZone)
             for item in items:
                 zoneConfig.set(currentZone, item[0], item[1])
-            zoneConfig.set(currentZone,'zone_name',currentZone)
+            zoneConfig.set(currentZone, 'zone_name', currentZone)
             zoneConfig.remove_section(oldZone)
-            self.ui.zones_dropdown.setItemText(self.ui.zones_dropdown.currentIndex(),currentZone)
+            self.ui.zones_dropdown.setItemText(self.ui.zones_dropdown.currentIndex(), currentZone)
         # alert known device
         if zoneConfig.getboolean("DEFAULT", 'alert_on_recognized') != alertKnown:
             zoneConfig.set(currentZone, 'alert_on_recognized', str(alertKnown).lower())
@@ -281,11 +292,11 @@ class MainWindow(QMainWindow):
         maxDevices = self.ui.maxdev_spin.value()
         devTimeout = self.ui.timeout_spin.value()
         # write inputs to settings config file
-        settingsConfig.set('email','email_address', email)
-        settingsConfig.set('email','email_subject', subject)
-        settingsConfig.set('sms','twilio_account_sid', sid)
-        settingsConfig.set('sms','twilio_auth_token', token)
-        settingsConfig.set('sms','sender_phone_number', phone)
+        settingsConfig.set('email', 'email_address', email)
+        settingsConfig.set('email', 'email_subject', subject)
+        settingsConfig.set('sms', 'twilio_account_sid', sid)
+        settingsConfig.set('sms', 'twilio_auth_token', token)
+        settingsConfig.set('sms', 'sender_phone_number', phone)
         with open(args.notification_file, 'w') as configFile:
             settingsConfig.write(configFile)
         # write inputs to kismet config file
@@ -299,9 +310,11 @@ class MainWindow(QMainWindow):
     def loadSmtp(self):
         settingsConfig = configparser.ConfigParser()
         settingsConfig.read(args.notification_file)
+        # save current settings
         servername = settingsConfig.get('email', 'smtp_servername')
         port = settingsConfig.getint('email', 'smtp_portnumber')
         auth = settingsConfig.getboolean('email', 'smtp_authentication_required')
+        # update widgets to current settings
         self.ui.method_dropdown.clear()
         self.ui.method_dropdown.addItem("plain")
         self.ui.method_dropdown.addItem("STARTTLS")
@@ -318,13 +331,13 @@ class MainWindow(QMainWindow):
     def saveSmtp(self):
         settingsConfig = configparser.ConfigParser()
         settingsConfig.read(args.notification_file)
+        # save inputted values
         servername = self.ui.server_edit.text()
         port = self.ui.port_spin.value()
         method = self.ui.method_dropdown.currentText()
         auth = self.ui.auth_check.isChecked()
         user = self.ui.username_edit.text()
         passwd = self.ui.pass_edit.text()
-
         # write inputs to settings config file
         settingsConfig.set('email', 'smtp_servername', servername)
         settingsConfig.set('email', 'smtp_portnumber', str(port))
@@ -332,10 +345,10 @@ class MainWindow(QMainWindow):
         settingsConfig.set('email', 'smtp_authentication_required', str(auth).lower())
         settingsConfig.set('email', 'smtp_username', user)
         settingsConfig.set('email', 'smtp_password', passwd)
-
+        # write back to file
         with open(args.notification_file, 'w') as configFile:
             settingsConfig.write(configFile)
-        
+
     def onChange(self, index):
         # update the current page
         if(index == 0):
