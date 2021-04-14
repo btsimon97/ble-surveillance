@@ -27,6 +27,9 @@ parser.add_argument("-ll", "--log-level", type=str,
 parser.add_argument("-lf", "--log-file", type=str,
                    help="Specify the logging file to use. Default is /var/log/bluemon/bluemon-kismet.log",
                     default="/var/log/bluemon/bluemon-unix.log")
+parser.add_argument("-uud","--unknown-ubertooth-device-file", type=str,
+                    help="Specify the file with the list of unknown devices to diplay in GUI. Default is /etc/bluemon/unknown.conf",
+                    default="/etc/bluemon/unknown_ubertooth.conf")
 args = parser.parse_args()
 
 # Begin Script Constants Definition
@@ -52,6 +55,9 @@ zones.read(args.zone_file)
 # Read in the devices list
 devices = configparser.ConfigParser(interpolation=None)
 devices.read(args.device_file)
+
+#get parser for unknown devices list
+unknown_devices = configparser.ConfigParser()
 
 # Get environment variables from systemd that we use to connect to the socket.
 LISTEN_FDS = int(os.environ.get("LISTEN_FDS", 0))
@@ -96,6 +102,18 @@ async def send_alert(zone, msg):
     writer.write(json.dumps(message).encode())
     writer.close()
 
+async def write_to_unknown(name,mac):
+    #reads in the current unknown config file
+    unknown_devices.read(args.unknown_ubertooth_device_file)
+    #adds a new section for the detected unknown device
+    unknown_devices[name + "." + mac] = {'device_name': name, 'device_macaddr': mac}
+    #removes some sections to ensure that the list is up to date (removes oldest first)
+    while(len(unknown_devices.sections())>50):
+        sectionRemove = unknown_devices.popitem()[0]
+        unknown_devices.remove_section(sectionRemove)
+    #writes back modified config file
+    with open(args.unknown_ubertooth_device_file,'w') as configfile:
+         unknown_devices.write(configfile)
 
 # Process Received Message
 async def process_message(message_json):
@@ -145,6 +163,13 @@ async def process_message(message_json):
             # UAP isn't known and zone doesn't want unknown UAPs, or some other invalid state occurred.
             else:
                 continue  # skip rest of function and go to next device in list.
+
+            # if device is unknown, add it to the unknown config file
+            if not device_known and device_advertised_name and (device_advertised_name != device_mac):
+                await write_to_unknown(device_advertised_name, device_mac)
+            elif not device_known:
+                await write_to_unknown("unknown", device_mac)
+
             alert_message = None
             if device_known and zones.getboolean(zone, 'alert_on_recognized'):
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known device " + device_nickname \

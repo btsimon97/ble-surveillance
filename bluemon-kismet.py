@@ -27,6 +27,9 @@ parser.add_argument("-ll", "--log-level", type=str,
 parser.add_argument("-lf", "--log-file", type=str,
                    help="Specify the logging file to use. Default is /var/log/bluemon/bluemon-kismet.log",
                     default="/var/log/bluemon/bluemon-kismet.log")
+parser.add_argument("-ukd","--unknown-kismet-device-file", type=str,
+                    help="Specify the file with the list of unknown devices to diplay in GUI. Default is /etc/bluemon/unknown.conf",
+                    default="/etc/bluemon/unknown_kismet.conf")
 args = parser.parse_args()
 
 # Begin Script Functions Definition
@@ -43,6 +46,7 @@ zones.read(args.zone_file)
 devices = configparser.ConfigParser(interpolation=None)
 devices.read(args.device_file)
 
+unknown_devices = configparser.ConfigParser()
 
 # Setup logging
 logging.basicConfig(filename=args.log_file, level=args.log_level, format='%(asctime)s %(levelname)s:%(message)s')
@@ -86,6 +90,18 @@ async def send_alert(zone, msg):
     writer.write(json.dumps(message).encode())
     writer.close()
 
+async def write_to_unknown(name,mac):
+    #reads in the current unknown config file
+    unknown_devices.read(args.unknown_kismet__device_file)
+    #adds a new section for the detected unknown device
+    unknown_devices[name + "." + mac] = {'device_name': name, 'device_macaddr': mac}
+    #removes some sections to ensure that the list is up to date (removes oldest first)
+    while(len(unknown_devices.sections())>50):
+        sectionRemove = unknown_devices.popitem()[0]
+        unknown_devices.remove_section(sectionRemove)
+    #writes back modified config file
+    with open(args.unknown_kismet_device_file,'w') as configfile:
+         unknown_devices.write(configfile)
 
 # Process Received Message
 async def process_message(message_json):
@@ -107,6 +123,11 @@ async def process_message(message_json):
             if detected_by_uuid.upper() == zones.get(section, 'zone_uuid').upper():
                 zone = section
                 break
+    # if device is unknown, add it to the unknown config file
+    if not device_known and (device_name != device_mac):
+        await write_to_unknown(device_name, device_mac)
+    elif not device_known:
+        await write_to_unknown("unknown", device_mac)
     # Determine if notification settings for zone require notification and fire one if they do.
     alert_message = None
     if (message_json['NEW_DEVICE']['kismet.device.base.type'] == "BTLE" or message_json['NEW_DEVICE']['kismet.device.base.type'] == "BTLE Device") and zones.getboolean(zone, 'monitor_btle_devices'):
@@ -144,6 +165,8 @@ async def process_message(message_json):
         if alert_message:
             await send_alert(zone, alert_message)
 
+
+
     elif message_json['NEW_DEVICE']['kismet.device.base.type'] == "BR/EDR" and zones.getboolean(zone, 'monitor_bt_devices'):
         if zones.getboolean(zone, 'alert_on_unrecognized') and not device_known:
             if device_name == device_mac:
@@ -177,6 +200,7 @@ async def process_message(message_json):
         # If alert message is defined, indicating we need to send an alert.
         if alert_message:
             await send_alert(zone, alert_message)
+
     else:
         # Don't fire notification, but log something saying we got something to ignore.
         logging.debug("Ignoring Device event due to zone settings.")
