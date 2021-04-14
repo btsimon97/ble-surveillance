@@ -52,9 +52,9 @@ unknown_devices = configparser.ConfigParser()
 logging.basicConfig(filename=args.log_file, level=args.log_level, format='%(asctime)s %(levelname)s:%(message)s')
 
 
-# device status(known or unknown) if messsage recieved from kismet
+# Send alert based on zone settings
 async def send_alert(zone, msg):
-    notification_channels = [channel.strip() for channel in
+    notification_channels = [channel.lower().strip() for channel in
                              zones.get(zone, 'notification_channels').replace(']', '').replace('[', '').replace('"', '').split(",")]
 
     # Format message into notification server JSON
@@ -113,13 +113,14 @@ async def process_message(message_json):
     device_known = False
     device_nickname = None
     for section in devices.sections():
-        if devices.get(section, 'device_macaddr') == device_name:
+        if devices.get(section, 'device_macaddr').upper() == device_mac.upper():
             device_known = True
             device_nickname = devices.get(section, 'device_nickname')
+            break
     # Determine which zone has detected the device from the configured zones
     for section in zones.sections():
         if section != 'DEFAULT':
-            if detected_by_uuid == zones.get(section, 'zone_uuid'):
+            if detected_by_uuid.upper() == zones.get(section, 'zone_uuid').upper():
                 zone = section
                 break
     # if device is unknown, add it to the unknown config file
@@ -138,7 +139,7 @@ async def process_message(message_json):
             else:
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown BTLE device with Name: " \
                                 + device_name + " and MAC: " + device_mac
-        elif zones.getboolean(zone, 'alert_on_recognized'):
+        elif zones.getboolean(zone, 'alert_on_recognized') and device_known:
             alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known BTLE device " + device_nickname \
                             + " (" + device_mac + ")"
 
@@ -174,7 +175,7 @@ async def process_message(message_json):
             else:
                 alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected an unknown BT device with Name: " \
                                 + device_name + " and MAC: " + device_mac
-        elif zones.getboolean(zone, 'alert_on_recognized'):
+        elif zones.getboolean(zone, 'alert_on_recognized') and device_known:
             alert_message = "Zone " + zones.get(zone, 'zone_name') + " detected known BT device " + device_nickname \
                             + " (" + device_mac + ")"
 
