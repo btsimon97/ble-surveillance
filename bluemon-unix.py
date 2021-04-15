@@ -25,10 +25,11 @@ parser.add_argument("-ll", "--log-level", type=str,
                          "Valid options are DEBUG, INFO, WARNING, ERROR, and CRITICAL",
                     default="INFO", choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'])
 parser.add_argument("-lf", "--log-file", type=str,
-                   help="Specify the logging file to use. Default is /var/log/bluemon/bluemon-kismet.log",
+                    help="Specify the logging file to use. Default is /var/log/bluemon/bluemon-kismet.log",
                     default="/var/log/bluemon/bluemon-unix.log")
-parser.add_argument("-uud","--unknown-ubertooth-device-file", type=str,
-                    help="Specify the file with the list of unknown devices to diplay in GUI. Default is /etc/bluemon/unknown.conf",
+parser.add_argument("-ud", "--unknown-device-file", type=str,
+                    help="Specify the file with the list of unknown devices to diplay in GUI. "
+                         "Default is /etc/bluemon/unknown_ubertooth.conf",
                     default="/etc/bluemon/unknown_ubertooth.conf")
 args = parser.parse_args()
 
@@ -56,7 +57,7 @@ zones.read(args.zone_file)
 devices = configparser.ConfigParser(interpolation=None)
 devices.read(args.device_file)
 
-#get parser for unknown devices list
+# get parser for unknown devices list
 unknown_devices = configparser.ConfigParser()
 
 # Get environment variables from systemd that we use to connect to the socket.
@@ -102,18 +103,20 @@ async def send_alert(zone, msg):
     writer.write(json.dumps(message).encode())
     writer.close()
 
-async def write_to_unknown(name,mac):
-    #reads in the current unknown config file
+
+async def write_to_unknown(name, mac):
+    # reads in the current unknown config file
     unknown_devices.read(args.unknown_ubertooth_device_file)
-    #adds a new section for the detected unknown device
+    # adds a new section for the detected unknown device
     unknown_devices[name + "." + mac] = {'device_name': name, 'device_macaddr': mac}
-    #removes some sections to ensure that the list is up to date (removes oldest first)
-    while(len(unknown_devices.sections())>50):
+    # removes some sections to ensure that the list is up to date (removes oldest first)
+    while len(unknown_devices.sections()) > 50:
         sectionRemove = unknown_devices.popitem()[0]
         unknown_devices.remove_section(sectionRemove)
-    #writes back modified config file
-    with open(args.unknown_ubertooth_device_file,'w') as configfile:
-         unknown_devices.write(configfile)
+    # writes back modified config file
+    with open(args.unknown_ubertooth_device_file, 'w') as configfile:
+        unknown_devices.write(configfile)
+
 
 # Process Received Message
 async def process_message(message_json):
