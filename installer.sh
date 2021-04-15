@@ -257,9 +257,10 @@ cp /etc/bluemon/devices.conf.example /etc/bluemon/devices.conf
 cp /etc/bluemon/notifications.conf.example /etc/bluemon/notifications.conf
 
 #Create the unknown device config file for the GUI
-touch /etc/bluemon/unknown.conf
-chown $PROG_USERNAME:$PROG_GROUPNAME /etc/bluemon/unknown.conf
-chmod 660 /etc/bluemon/unknown.conf
+touch /etc/bluemon/unknown_kismet.conf
+touch /etc/bluemon/unknown_ubertooth.conf
+chown $PROG_USERNAME:$PROG_GROUPNAME /etc/bluemon/unknown_*.conf
+chmod 660 /etc/bluemon/unknown_*.conf
 
 #set the API token in Bluemon's config.
 sed -i "s/api_token = none/api_token=$API_TOKEN/" /etc/bluemon/bluemon.conf
