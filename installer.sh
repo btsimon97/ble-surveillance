@@ -11,7 +11,7 @@ PROG_LOG_DIR="/var/log/bluemon"
 PROG_EXEC_DIR="/opt/bluemon"
 KISMET_APT_PKGS="kismet"
 PIP_APT_PKGNAME="python3-pip"
-PROG_DEPENDENCIES="curl wget python3-venv python3-wheel python3-setuptools ubertooth ubertooth-firmware"
+PROG_DEPENDENCIES="curl wget python3-venv python3-wheel python3-setuptools ubertooth ubertooth-firmware python3-pyqt5"
 #End Script Constants Declaration
 
 # cd to script location so file copy commands work
@@ -108,7 +108,7 @@ else
 fi
 
 #Create the venv and load the dependencies
-python3 -m venv $PROG_EXEC_DIR/venv
+python3 -m venv --system-site-packages $PROG_EXEC_DIR/venv
 source $PROG_EXEC_DIR/venv/bin/activate
 pip3 install -r requirements.txt
 deactivate
