@@ -57,9 +57,6 @@ zones.read(args.zone_file)
 devices = configparser.ConfigParser(interpolation=None)
 devices.read(args.device_file)
 
-# get parser for unknown devices list
-unknown_devices = configparser.ConfigParser()
-
 # Get environment variables from systemd that we use to connect to the socket.
 LISTEN_FDS = int(os.environ.get("LISTEN_FDS", 0))
 LISTEN_PID = os.environ.get("LISTEN_PID", None) or os.getpid()
@@ -105,6 +102,7 @@ async def send_alert(zone, msg):
 
 
 async def write_to_unknown(name, mac):
+    unknown_devices = configparser.ConfigParser()
     # reads in the current unknown config file
     unknown_devices.read(args.unknown_ubertooth_device_file)
     # adds a new section for the detected unknown device

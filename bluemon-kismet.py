@@ -47,8 +47,6 @@ zones.read(args.zone_file)
 devices = configparser.ConfigParser(interpolation=None)
 devices.read(args.device_file)
 
-unknown_devices = configparser.ConfigParser()
-
 # Setup logging
 logging.basicConfig(filename=args.log_file, level=args.log_level, format='%(asctime)s %(levelname)s:%(message)s')
 
@@ -94,7 +92,8 @@ async def send_alert(zone, msg):
 
 async def write_to_unknown(name, mac):
     # reads in the current unknown config file
-    unknown_devices.read(args.unknown_kismet__device_file)
+    unknown_devices = configparser.ConfigParser()
+    unknown_devices.read(args.unknown_kismet_device_file)
     # adds a new section for the detected unknown device
     unknown_devices[name + "." + mac] = {'device_name': name, 'device_macaddr': mac}
     # removes some sections to ensure that the list is up to date (removes oldest first)
